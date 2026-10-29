@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# SEQIC Report Distribution 2026 <img src="man/figures/README/HHS PFP 4.png" align="right" width="200" alt="" />
+# SEQIC Report 2026 <img src="man/figures/README/HHS PFP 4.png" align="right" width="200" alt="" />
 
 <!-- badges: start -->
 
@@ -9,13 +9,13 @@
 Source](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 <!-- badges: end -->
 
-The SEQIC Report Distribution 2026 project is a reproducible,
-open-source analytic workflow designed to generate standardized trauma
-quality indicators for Iowa-verified trauma centers. It covers data from
-calendar years 2021–2025, with 2025 representing the most current year
-of analysis. This report documents state-level trauma system performance
-in Iowa. Trauma centers all receive individualized reports on the SEQIC
-and risk-adjusted benchmarking, but that is not within the scope of this
+The SEQIC Report 2026 project is a reproducible, open-source analytic
+workflow designed to generate standardized trauma quality indicators for
+Iowa-verified trauma centers. It covers data from calendar years
+2021–2025, with 2025 representing the most current year of analysis.
+This report documents state-level trauma system performance in Iowa.
+Trauma centers all receive individualized reports on the SEQIC and
+risk-adjusted benchmarking, but that is not within the scope of this
 report. The written report related to the analyses documented in this
 repository can be found on trauma registry webpage of the [Bureau of
 Emergency Medical and Trauma
@@ -28,11 +28,6 @@ multi-disciplinary group under the Iowa Department of Health and Human
 Services (HHS). The indicators reflect key aspects of trauma system
 performance, including timeliness, triage accuracy, data completeness,
 and risk adjusted mortality calculations.
-
-Outputs include center-level summary statistics, visualizations, and
-comparisons across trauma levels and time periods. These results will be
-distributed to trauma centers across Iowa to support continuous quality
-improvement and peer benchmarking.
 
 ## {traumar}
 
