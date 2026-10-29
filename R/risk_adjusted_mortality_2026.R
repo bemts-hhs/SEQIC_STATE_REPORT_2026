@@ -1,0 +1,129 @@
+###_____________________________________________________________________________
+### Produce the Risk Adjusted Mortality Metrics for Each Trauma Center
+### To run this script, you must first have ran seqic_data_load.R and
+### seqic_report_setup_2025.R.  Without running these, some functions and the
+### data needed to use this script will not be available in your global
+### environment
+###_____________________________________________________________________________
+
+# Clean the data and prepare for TRISS analyses ----
+trauma_2020_2024_clean <- trauma_2020_2024 |>
+  dplyr::filter(!is.na(Probability_of_Survival_Calc)) |>
+  dplyr::mutate(Alive = ifelse(Death, 0, 1)) |>
+  dplyr::group_by(Year) |>
+  dplyr::distinct(Unique_Incident_ID, .keep_all = TRUE) |>
+  dplyr::ungroup()
+
+# Calculate metrics at the state level ----
+## State Level W, M, and Z scores ----
+### State Level iterate over groups - Year and facility ----
+trauma_performance_result_years_state <- trauma_2020_2024_clean |>
+  tidyr::nest(data = -Year) |>
+  dplyr::mutate(
+    results = purrr::map(
+      data,
+      ~ traumar::trauma_performance(
+        df = .x,
+        Ps_col = Probability_of_Survival_Calc,
+        outcome_col = Death,
+        z_method = "survival"
+      )
+    )
+  ) |>
+  dplyr::select(-data) |>
+  tidyr::unnest(results) |>
+  dplyr::arrange(Year)
+
+### State Level iterate over trauma type groups ----
+### facility, mechanism of injury do not add year as a stratum given that some
+### counts will be very small in groups
+trauma_performance_result_mech_state <- trauma_2020_2024_clean |>
+  tidyr::nest(data = -Trauma_Type) |>
+  dplyr::mutate(
+    results = purrr::map(
+      data,
+      ~ traumar::trauma_performance(
+        df = .x,
+        Ps_col = Probability_of_Survival_Calc,
+        outcome_col = Death,
+        z_method = "survival"
+      )
+    )
+  ) |>
+  dplyr::select(-data) |>
+  tidyr::unnest(results) |>
+  dplyr::arrange(Trauma_Type) |>
+  dplyr::mutate(
+    Trauma_Type = ifelse(is.na(Trauma_Type), "Missing", Trauma_Type)
+  )
+
+### State Level iterate over TTA groups ----
+### facility, mechanism of injury do not add year as a stratum given that some
+### counts will be very small in groups
+trauma_performance_result_tta_state <- trauma_2020_2024_clean |>
+  tidyr::nest(
+    data = -Trauma_Team_Activated
+  ) |>
+  dplyr::mutate(
+    results = purrr::map(
+      data,
+      ~ traumar::trauma_performance(
+        df = .x,
+        Ps_col = Probability_of_Survival_Calc,
+        outcome_col = Death,
+        z_method = "survival"
+      )
+    )
+  ) |>
+  dplyr::select(-data) |>
+  tidyr::unnest(results) |>
+  dplyr::arrange(Trauma_Team_Activated)
+
+## State Level Relative Mortality Metric ----
+rm_summary_results_state <- trauma_2020_2024_clean |>
+  tidyr::nest(data = -Year) |>
+  dplyr::mutate(
+    results = purrr::map(
+      data,
+      ~ dynamic_rm_bin_summary(
+        data = .x,
+        Ps_col = Probability_of_Survival_Calc,
+        outcome_col = Alive,
+        group_vars = NULL,
+        n_samples = 1000,
+        bootstrap_ci = TRUE,
+        seed = 10232015
+      )
+    )
+  ) |>
+  dplyr::select(-data) |>
+  tidyr::unnest(results) |>
+  dplyr::arrange(Year, bin_number)
+
+# EXPORT ----
+
+## export performance by year and region at the state level ----
+
+### STATE LEVEL W, M, and Z scores grouped by year ----
+export_state_data(
+  x = trauma_performance_result_years_state,
+  subfolder = "rmm_wmz"
+)
+
+### STATE LEVEL W, M, and Z scores grouped by mechanism of injury ----
+export_state_data(
+  x = trauma_performance_result_mech_state,
+  subfolder = "rmm_wmz"
+)
+
+### STATE LEVEL W, M, and Z scores grouped by whether a TTA was called ----
+export_state_data(
+  x = trauma_performance_result_tta_state,
+  subfolder = "rmm_wmz"
+)
+
+### STATE LEVEL RMM statistics by year ----
+export_state_data(
+  x = rm_summary_results_state,
+  subfolder = "rmm_wmz"
+)
