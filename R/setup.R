@@ -185,153 +185,152 @@ add_change_metrics <- function(df, group = NULL) {
 # Custom functions for counts ----
 ###_____________________________________________________________________________
 
-{
-  ###_____________________________________________________________________________
-  ### Custom function to get unique count of injury cases in Patient Registry
-  ### Equivalent to counting unique inpatient visits based on Unique_Incident_ID
-  ### Supports dynamic grouping via tidy evaluation (bare column names in ...)
-  ###_____________________________________________________________________________
-  injury_case_count <- function(
-    df,
-    ...,
-    descriptive_stats = FALSE,
-    group = NULL
-  ) {
-    # Capture grouping variables as symbols and convert to character strings for .by and joins
-    grouping_syms <- rlang::ensyms(...)
-    grouping_vars <- sapply(grouping_syms, rlang::as_string)
+###_____________________________________________________________________________
+### Custom function to get unique count of injury cases in Patient Registry
+### Equivalent to counting unique inpatient visits based on Unique_Incident_ID
+### Supports dynamic grouping via tidy evaluation (bare column names in ...)
+###_____________________________________________________________________________
+injury_case_count <- function(
+  df,
+  ...,
+  descriptive_stats = FALSE,
+  group = NULL
+) {
+  # Capture grouping variables as symbols and convert to character strings for .by and joins
+  grouping_syms <- rlang::ensyms(...)
+  grouping_vars <- sapply(grouping_syms, rlang::as_string)
 
-    # Create temporary dataset with unique incident rows
-    # Unique incident defined by Unique_Incident_ID (one row per inpatient visit)
-    temp <- df |>
-      dplyr::distinct(Unique_Incident_ID, .keep_all = TRUE)
+  # Create temporary dataset with unique incident rows
+  # Unique incident defined by Unique_Incident_ID (one row per inpatient visit)
+  temp <- df |>
+    dplyr::distinct(Unique_Incident_ID, .keep_all = TRUE)
 
-    if (!descriptive_stats) {
-      # Simple count of unique cases by user-defined grouping variables
-      out <- temp |>
-        dplyr::count(...)
-
-      cli::cli_alert_success(
-        "Returning the count(s) of total unique inpatient injury cases."
-      )
-
-      return(out)
-    }
-
-    # When descriptive_stats = TRUE, add change metrics (numeric and percent change)
+  if (!descriptive_stats) {
+    # Simple count of unique cases by user-defined grouping variables
     out <- temp |>
-      dplyr::count(...) |>
-      add_change_metrics(group = {{ group }})
+      dplyr::count(...)
 
     cli::cli_alert_success(
-      "Returning the count(s) of total unique inpatient injury cases and descriptive statistics."
+      "Returning the count(s) of total unique inpatient injury cases."
     )
 
     return(out)
   }
 
-  ###_____________________________________________________________________________
-  ### Custom function to get unique count of injuries in Patient Registry
-  ### A true estimation of the number of incidents (not encounters or records)
-  ###_____________________________________________________________________________
-  injury_incident_count <- function(
-    df,
-    ...,
-    descriptive_stats = FALSE,
-    group = NULL
-  ) {
-    # Capture grouping variables from bare column names (e.g., Year, County)
-    grouping_syms <- rlang::ensyms(...) # capture as symbols for tidy eval
-    grouping_vars <- sapply(grouping_syms, rlang::as_string) # convert to character for .by and join
+  # When descriptive_stats = TRUE, add change metrics (numeric and percent change)
+  out <- temp |>
+    dplyr::count(...) |>
+    add_change_metrics(group = {{ group }})
 
-    # Create a temporary object with one row per unique injury event
-    # A unique event is defined as a unique combination of Incident_Date and Unique_Patient_ID
-    # This removes duplicated encounters for the same incident
-    temp <- df |>
-      dplyr::distinct(Year, Incident_Date, Unique_Patient_ID, .keep_all = TRUE)
+  cli::cli_alert_success(
+    "Returning the count(s) of total unique inpatient injury cases and descriptive statistics."
+  )
 
-    if (!descriptive_stats) {
-      # Return a simple count of injury events by grouping variable(s)
-      out <- temp |>
-        dplyr::count(!!!grouping_syms)
+  return(out)
+}
 
-      cli::cli_alert_success(
-        "Returning the count(s) of total unique injury events leading to a trauma center visit."
-      )
+###_____________________________________________________________________________
+### Custom function to get unique count of injuries in Patient Registry
+### A true estimation of the number of incidents (not encounters or records)
+###_____________________________________________________________________________
+injury_incident_count <- function(
+  df,
+  ...,
+  descriptive_stats = FALSE,
+  group = NULL
+) {
+  # Capture grouping variables from bare column names (e.g., Year, County)
+  grouping_syms <- rlang::ensyms(...) # capture as symbols for tidy eval
+  grouping_vars <- sapply(grouping_syms, rlang::as_string) # convert to character for .by and join
 
-      return(out)
-    }
+  # Create a temporary object with one row per unique injury event
+  # A unique event is defined as a unique combination of Incident_Date and Unique_Patient_ID
+  # This removes duplicated encounters for the same incident
+  temp <- df |>
+    dplyr::distinct(Year, Incident_Date, Unique_Patient_ID, .keep_all = TRUE)
 
-    # When descriptive_stats = TRUE, include additional summary statistics
-    # This captures reinjury characteristics for patients who appear >1 time per group
-
-    # Step 1: Identify reinjury patterns (count > 1 per group)
-    stat <- temp |>
-      dplyr::filter(!is.na(Unique_Patient_ID)) |>
-      dplyr::count(!!!grouping_syms, Unique_Patient_ID) |>
-      summarize_reinjury_stats(grouping_vars = grouping_vars)
-
-    # Step 2: Count events and calculate change metrics
+  if (!descriptive_stats) {
+    # Return a simple count of injury events by grouping variable(s)
     out <- temp |>
-      dplyr::count(!!!grouping_syms) |>
-      add_change_metrics(group = {{ group }}) |>
-      dplyr::left_join(stat, by = grouping_vars) # <- this fixes the join
+      dplyr::count(!!!grouping_syms)
 
     cli::cli_alert_success(
-      "Returning the count(s) of total unique injury events leading to a trauma center visit and descriptive statistics."
+      "Returning the count(s) of total unique injury events leading to a trauma center visit."
     )
 
     return(out)
   }
 
-  ###_____________________________________________________________________________
-  ### Custom function to get unique count of patients in Patient Registry
-  ### Estimates number of unique patients with trauma center visits per group
-  ### Assumes Unique_Patient_ID is consistent across years (mostly)
-  ### Groups first, then deduplicates per group to count unique patients correctly
-  ### Supports flexible grouping via tidy evaluation (bare column names in ...)
-  ###_____________________________________________________________________________
-  injury_patient_count <- function(
-    df,
-    ...,
-    descriptive_stats = FALSE,
-    group = NULL
-  ) {
-    # Capture grouping variables as symbols and convert to character strings for .by and joins
-    grouping_syms <- rlang::ensyms(...)
-    grouping_vars <- sapply(grouping_syms, rlang::as_string)
+  # When descriptive_stats = TRUE, include additional summary statistics
+  # This captures reinjury characteristics for patients who appear >1 time per group
 
-    # Prepare dataset: remove rows with missing patient IDs, group by user variables,
-    # then select distinct Unique_Patient_ID within each group to avoid counting duplicates
-    temp <- df |>
-      dplyr::filter(!is.na(Unique_Patient_ID)) |>
-      dplyr::group_by(!!!grouping_syms) |>
-      dplyr::distinct(Unique_Patient_ID, .keep_all = TRUE) |>
-      dplyr::ungroup()
+  # Step 1: Identify reinjury patterns (count > 1 per group)
+  stat <- temp |>
+    dplyr::filter(!is.na(Unique_Patient_ID)) |>
+    dplyr::count(!!!grouping_syms, Unique_Patient_ID) |>
+    summarize_reinjury_stats(grouping_vars = grouping_vars)
 
-    if (!descriptive_stats) {
-      # Basic count of unique patients per group
-      out <- temp |>
-        dplyr::count(!!!grouping_syms)
+  # Step 2: Count events and calculate change metrics
+  out <- temp |>
+    dplyr::count(!!!grouping_syms) |>
+    add_change_metrics(group = {{ group }}) |>
+    dplyr::left_join(stat, by = grouping_vars) # <- this fixes the join
 
-      cli::cli_alert_success(
-        "Returning the count(s) of total unique patients who had a trauma center visit and have a non-missing unique patient ID."
-      )
+  cli::cli_alert_success(
+    "Returning the count(s) of total unique injury events leading to a trauma center visit and descriptive statistics."
+  )
 
-      return(out)
-    }
+  return(out)
+}
 
-    # When descriptive_stats = TRUE, add change metrics for counts
+###_____________________________________________________________________________
+### Custom function to get unique count of patients in Patient Registry
+### Estimates number of unique patients with trauma center visits per group
+### Assumes Unique_Patient_ID is consistent across years (mostly)
+### Groups first, then deduplicates per group to count unique patients correctly
+### Supports flexible grouping via tidy evaluation (bare column names in ...)
+###_____________________________________________________________________________
+injury_patient_count <- function(
+  df,
+  ...,
+  descriptive_stats = FALSE,
+  group = NULL
+) {
+  # Capture grouping variables as symbols and convert to character strings for .by and joins
+  grouping_syms <- rlang::ensyms(...)
+  grouping_vars <- sapply(grouping_syms, rlang::as_string)
+
+  # Prepare dataset: remove rows with missing patient IDs, group by user variables,
+  # then select distinct Unique_Patient_ID within each group to avoid counting duplicates
+  temp <- df |>
+    dplyr::filter(!is.na(Unique_Patient_ID)) |>
+    dplyr::group_by(!!!grouping_syms) |>
+    dplyr::distinct(Unique_Patient_ID, .keep_all = TRUE) |>
+    dplyr::ungroup()
+
+  if (!descriptive_stats) {
+    # Basic count of unique patients per group
     out <- temp |>
-      dplyr::count(!!!grouping_syms) |>
-      add_change_metrics(group = {{ group }})
+      dplyr::count(!!!grouping_syms)
 
     cli::cli_alert_success(
-      "Returning the count(s) of total unique patients who had a trauma center visit and have a non-missing unique patient ID and descriptive statistics."
+      "Returning the count(s) of total unique patients who had a trauma center visit and have a non-missing unique patient ID."
     )
 
     return(out)
   }
+
+  # When descriptive_stats = TRUE, add change metrics for counts
+  out <- temp |>
+    dplyr::count(!!!grouping_syms) |>
+    add_change_metrics(group = {{ group }})
+
+  cli::cli_alert_success(
+    "Returning the count(s) of total unique patients who had a trauma center visit and have a non-missing unique patient ID and descriptive statistics."
+  )
+
+  return(out)
+}
 
 ###_____________________________________________________________________________
 # calc_age_adjusted_rate()
