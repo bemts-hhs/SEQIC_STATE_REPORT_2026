@@ -16,7 +16,8 @@ required_packages <- c(
   'nemsqar',
   'naniar',
   'cli',
-  'janitor'
+  'janitor',
+  'openxlsx2'
 )
 
 # these packages are utilized in this project and must be installed ----

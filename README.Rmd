@@ -22,6 +22,8 @@ The SEQIC Report 2026 project is a reproducible, open-source analytic workflow d
 
 This project operationalizes the trauma performance metrics developed by the System Evaluation and Quality Improvement Committee (SEQIC)—a multi-disciplinary group under the Iowa Department of Health and Human Services (HHS). The indicators reflect key aspects of trauma system performance, including timeliness, triage accuracy, data completeness, and risk adjusted mortality calculations.
 
+A change to the 2026 report as compared to previous state reporting years is that Indicators 4a and 4b will not be included. However, Iowa trauma centers can continue to expect to see statistics on these indicators coming to them as per usual.
+
 ## {traumar}
 This report utilizes the `traumar` R package (CRAN, [doi:10.32614/CRAN.package.traumar](https://doi.org/10.32614/CRAN.package.traumar)) to generate all statistical outputs related to trauma system performance. The `traumar` package provides validated functions grounded in peer-reviewed literature to support Continuous Quality Improvement (CQI) and Process Improvement (PI) in trauma care. Metrics calculated in this report—including the W-Score, M-Score, Z-Score, Relative Mortality Metric (RMM), triage accuracy indicators, and other SEQIC indicators—are derived using methods embedded in `traumar`. These methods are supported by publications such as Napoli et al. (2017), Boyd et al. (1987), Champion et al. (1989), and others. For detailed information on the methodology, refer to the package documentation at [https://bemts-hhs.github.io/traumar](https://bemts-hhs.github.io/traumar).
 

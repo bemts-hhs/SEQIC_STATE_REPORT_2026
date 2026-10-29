@@ -29,6 +29,11 @@ Services (HHS). The indicators reflect key aspects of trauma system
 performance, including timeliness, triage accuracy, data completeness,
 and risk adjusted mortality calculations.
 
+A change to the 2026 report as compared to previous state reporting
+years is that Indicators 4a and 4b will not be included. However, Iowa
+trauma centers can continue to expect to see statistics on these
+indicators coming to them as per usual.
+
 ## {traumar}
 
 This report utilizes the `traumar` R package (CRAN,
