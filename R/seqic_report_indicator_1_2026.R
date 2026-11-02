@@ -10,7 +10,7 @@
 ### SEQIC indicator 1 ####
 
 # Districts ----
-seqic_indicator_1_districts <- trauma_2020_2024 |>
+seqic_indicator_1_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     trauma_team_physician_service_type = Trauma_Team_Physician_Service_Type,
@@ -25,7 +25,7 @@ seqic_indicator_1_districts <- trauma_2020_2024 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level ----
-seqic_indicator_1_level <- trauma_2020_2024 |>
+seqic_indicator_1_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     trauma_team_physician_service_type = Trauma_Team_Physician_Service_Type,
@@ -44,7 +44,7 @@ seqic_indicator_1_level <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level ----
-seqic_indicator_1_results_state <- trauma_2020_2024 |>
+seqic_indicator_1_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     trauma_team_physician_service_type = Trauma_Team_Physician_Service_Type,
@@ -62,12 +62,39 @@ seqic_indicator_1_results_state <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
+## convert state-level into a Word friendly format ----
+seqic_indicator_1_results_state_convert <- seqic_indicator_1_results_state |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
+### save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_1_results_state_convert,
+  sheet_name = "indicator_1",
+  column_fill = "03617A",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = TRUE,
+  loop_category = "Indicator"
+)
+
 # state level - by age group
-seqic_indicator_1_results_state_age <- trauma_2020_2024 |>
+seqic_indicator_1_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     trauma_team_physician_service_type = Trauma_Team_Physician_Service_Type,
@@ -116,7 +143,7 @@ seqic_indicator_1_results_state_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # districts
-seqic_indicator_1_results_state_districts <- trauma_2020_2024 |>
+seqic_indicator_1_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     trauma_team_physician_service_type = Trauma_Team_Physician_Service_Type,
@@ -149,7 +176,7 @@ seqic_indicator_1_results_state_districts_wide <- seqic_indicator_1_results_stat
   )
 
 # trauma center verification levels
-seqic_indicator_1_results_state_verification <- trauma_2020_2024 |>
+seqic_indicator_1_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     trauma_team_physician_service_type = Trauma_Team_Physician_Service_Type,

@@ -5,6 +5,11 @@
 ### 9/30/2026 for 2021-2025.
 ###_____________________________________________________________________________
 
+# locations ----
+locations <- readxl::read_excel(
+  path = locations_file
+)
+
 # load files from source ----
 trauma_2021 <-
   readr::read_csv(
@@ -203,4 +208,5 @@ trauma_2021_2025 <- dplyr::bind_rows(
       )
     ),
     .after = Age_Range
-  )
+  ) |>
+  dplyr::left_join(locations, by = dplyr::join_by())

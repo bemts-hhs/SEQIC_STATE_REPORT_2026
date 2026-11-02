@@ -999,3 +999,390 @@ export_state_data <- function(
   # Write the data frame or tibble 'x' to the constructed file path in CSV format.
   readr::write_csv(x = x, file = file_path)
 }
+
+# export SEQIC results as a styled .xlsx file, save to disk ----
+# _____________________________________________________________________________
+# Export Data Frames or Tibbles to Styled Excel Workbooks
+# _____________________________________________________________________________
+#
+# Purpose
+# -------
+# Creates one or more formatted .xlsx files from a data.frame or tibble using
+# the openxlsx2 package. The function applies a standardized workbook style
+# including:
+#
+#   • Custom header fill colors
+#   • Header font formatting
+#   • Body font formatting
+#   • Highlighting of a designated performance column
+#   • Horizontal grid lines
+#   • Column-specific text alignment
+#   • Automated workbook creation and saving
+#
+# The function can operate in two modes:
+#
+#   1. Single-file mode
+#      Exports the entire dataset to a single workbook.
+#
+#   2. Loop mode
+#      Splits the dataset by a specified grouping variable and exports one
+#      workbook per category.
+#
+#
+# Arguments
+# ---------
+# data
+#   A data.frame or tibble containing the data to export.
+#
+# sheet_name
+#   Character string specifying the worksheet name.
+#
+# column_fill
+#   Hex color value used for the worksheet header row.
+#
+# font_family
+#   Font family applied to worksheet text.
+#
+# inner_grid_color
+#   Hex color value used for horizontal grid lines between rows.
+#
+# performance_col_name
+#   Name or partial name of the column to highlight. Matching is performed
+#   using grepl() and is case-insensitive. Exactly one matching column must
+#   be identified.
+#
+# performance_fill_color
+#   Hex color value used to highlight the performance column.
+#
+# loop
+#   Logical value indicating whether the dataset should be split into
+#   multiple workbooks.
+#
+# loop_category
+#   Character string naming the grouping column used when loop = TRUE.
+#   One workbook will be generated for each unique value in this column.
+#
+# output_folder
+#   Folder path where the workbook(s) will be saved.
+#
+#
+# Styling Rules
+# ____________
+# Header Row
+#   • Custom fill color
+#   • White text
+#   • Bold font
+#   • Font size 12
+#
+# Body Cells
+#   • Black text
+#   • Font size 12
+#
+# First Column
+#   • Bold text
+#   • Left aligned
+#
+# Remaining Columns
+#   • Center aligned
+#
+# Performance Column
+#   • Highlighted using performance_fill_color
+#
+# Borders
+#   • Thin horizontal inner borders only
+#   • No outer borders
+#
+#
+# Output
+# ------
+# loop = FALSE
+#   Creates a single workbook named:
+#
+#     {sheet_name}.xlsx
+#
+# loop = TRUE
+#   Creates one workbook for each unique value in loop_category:
+#
+#     {category}.xlsx
+#
+#
+# Validation
+# ----------
+# The function validates:
+#
+#   • data is a data.frame or tibble
+#   • loop_category is supplied when loop = TRUE
+#   • loop_category exists in data
+#   • exactly one performance column is identified
+#
+#
+# Dependencies
+# ____________
+#   • openxlsx2
+#   • cli
+#   • glue
+#   • tibble
+# _____________________________________________________________________________
+export_state_xlsx <- function(
+  data,
+  sheet_name,
+  column_fill,
+  font_family = "Work Sans",
+  inner_grid_color,
+  performance_col_name = "Performance",
+  performance_fill_color = "F8EDD3",
+  loop = FALSE,
+  loop_category = NULL,
+  output_folder = state_output_folder
+) {
+  # data must be a dataframe or tibble
+  if (!is.data.frame(data) && !tibble::is_tibble(data)) {
+    cli::cli_abort(
+      message = "{.var data} was found to have class {.cls {class(data)}}, but needs to be a {.cls data.frame} or {.cls tibble}"
+    )
+  }
+
+  # if loop, loop_category cannot be null
+  if (loop && is.null(loop_category)) {
+    cli::cli_abort(
+      message = "If {.var loop} is {.val TRUE}, then you must pass a column name as a string to {.var loop_category}."
+    )
+  }
+
+  # validate that the loop_category is a column in data
+  if (
+    !is.null(loop_category) &&
+      !loop_category %in% names(data)
+  ) {
+    cli::cli_abort(
+      message = "{.var loop_category} was not found in {.var data}."
+    )
+  }
+
+  # assign the column fill color
+  column_fill_color <- openxlsx2::wb_color(hex = column_fill)
+
+  # assign the white color
+  white_color <- openxlsx2::wb_color(name = "white")
+
+  # assign the black color
+  black_color <- openxlsx2::wb_color(name = "black")
+
+  # assign the inner grid color
+  inner_grid_color <- inner_hcolor <- openxlsx2::wb_color(
+    hex = inner_grid_color
+  )
+
+  # get the performance column index
+  performance_col <- which(
+    grepl(pattern = performance_col_name, x = names(data), ignore.case = TRUE)
+  )
+
+  # validate that exactly one performance column was found
+  if (length(performance_col) != 1) {
+    cli::cli_abort(
+      message = "Expected exactly one performance column matching
+      {.val {performance_col_name}}."
+    )
+  }
+
+  # assign cell fill color for the performance column
+  performance_fill_color <- openxlsx2::wb_color(hex = performance_fill_color)
+
+  # if loop is activated, loop over categories to export multiple files ----
+  if (loop) {
+    # apply the operation to to subsets of the data
+    for (category in unique(data[[loop_category]])) {
+      # get a subset of the data
+      data_subset <- data[data[[loop_category]] == category, ]
+
+      # assign the column dimensions
+      col_dims <- openxlsx2::wb_dims(
+        rows = 1,
+        cols = seq_len(ncol(data_subset))
+      )
+
+      # assign the row dimensions
+      row_dims <- openxlsx2::wb_dims(
+        rows = 2:(nrow(data_subset) + 1),
+        cols = seq_len(ncol(data_subset))
+      )
+
+      # assign cell locations for the performance column and its rows
+      performance_col_rows <- openxlsx2::wb_dims(
+        rows = 2:(nrow(data_subset) + 1),
+        cols = performance_col
+      )
+
+      # create a new workbook via openxlsx2
+      openxlsx2::wb_workbook() |>
+        # initialize a new worksheet via openxlsx2
+        openxlsx2::wb_add_worksheet(
+          sheet = sheet_name,
+          grid_lines = FALSE
+        ) |>
+        # add data from the source to the workbook
+        openxlsx2::wb_add_data(
+          sheet = sheet_name,
+          x = data_subset
+        ) |>
+        # add a fill color to the columns
+        openxlsx2::wb_add_fill(
+          dims = col_dims,
+          color = column_fill_color
+        ) |>
+        # adjust the column font styling
+        openxlsx2::wb_add_font(
+          dims = col_dims,
+          name = font_family,
+          bold = TRUE,
+          color = white_color,
+          size = 12
+        ) |>
+        # adjust the cell font styling
+        openxlsx2::wb_add_font(
+          dims = row_dims,
+          name = font_family,
+          color = black_color,
+          size = 12
+        ) |>
+        # make the first column (not column header) bold
+        openxlsx2::wb_add_font(
+          dims = openxlsx2::wb_dims(rows = 2:(nrow(data_subset) + 1), cols = 1),
+          name = font_family,
+          color = black_color,
+          bold = TRUE,
+          size = 12
+        ) |>
+        # add horizontal inner borders to the worksheet
+        openxlsx2::wb_add_border(
+          dims = openxlsx2::wb_dims(
+            rows = 1:(nrow(data_subset) + 1),
+            cols = seq_len(ncol(data_subset))
+          ),
+          inner_hgrid = "thin",
+          inner_hcolor = inner_grid_color,
+          bottom_border = "none",
+          left_border = "none",
+          right_border = "none",
+          top_border = "none"
+        ) |>
+        # add a fill to the performance column to highlight it
+        openxlsx2::wb_add_fill(
+          dims = performance_col_rows,
+          color = performance_fill_color
+        ) |>
+        # make all columns and their data centered except for the first
+        openxlsx2::wb_add_cell_style(
+          dims = openxlsx2::wb_dims(
+            rows = 1:(nrow(data_subset) + 1),
+            cols = 2:ncol(data_subset)
+          ),
+          horizontal = "center"
+        ) |>
+        # make the first column and its data aligned left
+        openxlsx2::wb_add_cell_style(
+          dims = openxlsx2::wb_dims(rows = 1:(nrow(data_subset) + 1), cols = 1),
+          horizontal = "left"
+        ) |>
+        # save the formatted worksheet data to disk as a .xlsx file
+        openxlsx2::wb_save(
+          file = glue::glue(
+            "{output_folder}/{category}.xlsx"
+          )
+        )
+    }
+
+    # if the loop is not activated, run the iteration on the whole document
+  } else {
+    # assign the column dimensions
+    col_dims <- openxlsx2::wb_dims(
+      rows = 1,
+      cols = seq_len(ncol(data))
+    )
+
+    # assign the row dimensions
+    row_dims <- openxlsx2::wb_dims(
+      rows = 2:(nrow(data) + 1),
+      cols = seq_len(ncol(data))
+    )
+
+    # assign cell locations for the performance column and its rows
+    performance_col_rows <- openxlsx2::wb_dims(
+      rows = 2:(nrow(data) + 1),
+      cols = performance_col
+    )
+
+    # create a new workbook via openxlsx2
+    openxlsx2::wb_workbook() |>
+      # initialize a new worksheet via openxlsx2
+      openxlsx2::wb_add_worksheet(
+        sheet = sheet_name,
+        grid_lines = FALSE
+      ) |>
+      # add data from the source to the workbook
+      openxlsx2::wb_add_data(
+        sheet = sheet_name,
+        x = data
+      ) |>
+      # add a fill color to the columns
+      openxlsx2::wb_add_fill(
+        dims = col_dims,
+        color = column_fill_color
+      ) |>
+      # adjust the column font styling
+      openxlsx2::wb_add_font(
+        dims = col_dims,
+        name = font_family,
+        bold = TRUE,
+        color = white_color,
+        size = 12
+      ) |>
+      # adjust the cell font styling
+      openxlsx2::wb_add_font(
+        dims = row_dims,
+        name = font_family,
+        color = black_color,
+        size = 12
+      ) |>
+      # make the first column (not column header) bold
+      openxlsx2::wb_add_font(
+        dims = openxlsx2::wb_dims(rows = 2:nrow(data) + 1, cols = 1),
+        name = font_family,
+        color = black_color,
+        bold = TRUE,
+        size = 12
+      ) |>
+      # add horizontal inner borders to the worksheet
+      openxlsx2::wb_add_border(
+        dims = row_dims,
+        inner_hgrid = "thin",
+        inner_hcolor = inner_grid_color,
+        bottom_border = "none",
+        left_border = "none",
+        right_border = "none",
+        top_border = "none"
+      ) |>
+      # add a fill to the performance column to highlight it
+      openxlsx2::wb_add_fill(
+        dims = performance_col_rows,
+        color = performance_fill_color
+      ) |>
+      # make all columns and their data centered except for the first
+      openxlsx2::wb_add_cell_style(
+        dims = openxlsx2::wb_dims(rows = 1:nrow(data) + 1, cols = 2:ncol(data)),
+        horizontal = "center"
+      ) |>
+      # make the first column and its data aligned left
+      openxlsx2::wb_add_cell_style(
+        dims = openxlsx2::wb_dims(rows = 1:nrow(data) + 1, cols = 1),
+        horizontal = "left"
+      ) |>
+      # save the formatted worksheet data to disk as a .xlsx file
+      openxlsx2::wb_save(
+        file = glue::glue(
+          "{output_folder}/{sheet_name}.xlsx"
+        )
+      )
+  }
+}
