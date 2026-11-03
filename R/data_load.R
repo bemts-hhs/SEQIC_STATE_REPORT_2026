@@ -208,5 +208,4 @@ trauma_2021_2025 <- dplyr::bind_rows(
       )
     ),
     .after = Age_Range
-  ) |>
-  dplyr::left_join(locations, by = dplyr::join_by())
+  )

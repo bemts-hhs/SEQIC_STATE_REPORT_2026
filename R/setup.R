@@ -548,11 +548,11 @@ calc_age_adjusted_rate <- function(
 #    to pivot it into long format with separate rows per indicator.
 # 3. Use match_seqic_indicator() to append indicator names and goals
 #    by matching on the indicator code.
-# 4. Compute comparison service area and trauma facility verification level
+# 4. Compute comparison HHS District and trauma facility verification level
 # results
-# 5. Use format_seqic_comparison() to clean up service area and comparable trauma
+# 5. Use format_seqic_comparison() to clean up HHS District and comparable trauma
 # facility verification results
-# 6. Join the service area and comparable verified trauma center data to the
+# 6. Join the HHS District and comparable verified trauma center data to the
 # agency-level data to provide a type of benchmark
 ###_____________________________________________________________________________
 
@@ -744,7 +744,7 @@ seqic_indicator_names <- data.frame(
 #
 # Returns a long-format tibble with columns: indicator, numerator, denominator,
 # performance, lower ci, and upper ci, along with any grouping variables like
-# Year, Service Area, etc.
+# Year, HHS District, etc.
 
 reshape_seqic_indicators <- function(
   data,
@@ -895,16 +895,16 @@ format_seqic_comparison <- function(
 #
 # It performs the following operations:
 # - Joins `data` to `data_level` by Year, Level I/II designation, and indicator code.
-# - Joins `data` to `data_district` by Year, Service Area, and indicator code.
+# - Joins `data` to `data_district` by Year, HHS District, and indicator code.
 # - Applies `pretty_percent()` formatting from the traumar package to all relevant
 #   percentage-based columns, rounding to 2 decimal places and preserving `NA` values.
 # - Standardizes all column names to lowercase.
 # - Renames `level_i_ii` to `level` for consistency in output.
 #
 # Expected inputs:
-# - `data`: Long-format SEQIC results with columns like Year, Level_I_II, Service Area, and indicator.
+# - `data`: Long-format SEQIC results with columns like Year, Level_I_II, HHS District, and indicator.
 # - `data_level`: State-level comparison data, matched on Year, Level_I_II, and indicator.
-# - `data_district`: Region-level comparison data, matched on Year, Service Area, and indicator.
+# - `data_district`: Region-level comparison data, matched on Year, HHS District, and indicator.
 #
 # Returns a formatted tibble with performance values and comparisons ready for tabular report output.
 join_comparison_data <- function(data, data_level, data_district) {
