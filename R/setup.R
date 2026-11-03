@@ -1,4 +1,4 @@
-# IOWA SEQIC REPORT PREP 2025 ----------------------------------------------
+# IOWA SEQIC REPORT PREP 2026 ----------------------------------------------
 # This script prepares for the analyses using the `traumar` package v1.2.7
 
 # Handy Functions --------------------------------------------------------------
@@ -915,7 +915,7 @@ join_comparison_data <- function(data, data_level, data_district) {
     ) |>
     dplyr::left_join(
       data_district,
-      by = dplyr::join_by(Year, `Service Area`, indicator)
+      by = dplyr::join_by(Year, `Iowa HHS District`, indicator)
     ) |>
     dplyr::mutate(dplyr::across(
       c(
@@ -1133,7 +1133,8 @@ export_state_xlsx <- function(
   performance_fill_color = "F8EDD3",
   loop = FALSE,
   loop_category = NULL,
-  output_folder = state_output_folder
+  output_folder = state_output_folder,
+  subfolder
 ) {
   # data must be a dataframe or tibble
   if (!is.data.frame(data) && !tibble::is_tibble(data)) {
@@ -1288,7 +1289,7 @@ export_state_xlsx <- function(
         # save the formatted worksheet data to disk as a .xlsx file
         openxlsx2::wb_save(
           file = glue::glue(
-            "{output_folder}/{category}.xlsx"
+            "{output_folder}/{subfolder}/{category}.xlsx"
           )
         )
     }
@@ -1381,7 +1382,7 @@ export_state_xlsx <- function(
       # save the formatted worksheet data to disk as a .xlsx file
       openxlsx2::wb_save(
         file = glue::glue(
-          "{output_folder}/{sheet_name}.xlsx"
+          "{output_folder}/{subfolder}/{sheet_name}.xlsx"
         )
       )
   }

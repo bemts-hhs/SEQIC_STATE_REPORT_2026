@@ -18,7 +18,7 @@ seqic_indicator_1_districts <- trauma_2021_2025 |>
     unique_incident_id = Unique_Incident_ID,
     response_time = Indicator_1_Time,
     trauma_team_activation_provider = Trauma_Team_Activation_Provider,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   format_seqic_comparison(type = "district") |>
@@ -80,19 +80,6 @@ seqic_indicator_1_results_state_convert <- seqic_indicator_1_results_state |>
   dplyr::rename_with(~ stringr::str_to_title(.)) |>
   dplyr::rename("Performance (95% CI)" = Performance)
 
-### save the converted values to disk for use in the report ----
-export_state_xlsx(
-  data = seqic_indicator_1_results_state_convert,
-  sheet_name = "indicator_1",
-  column_fill = "03617A",
-  font_family = "Work Sans",
-  inner_grid_color = "B9E1DA",
-  performance_col_name = "performance",
-  performance_fill_color = "F8EDD3",
-  loop = TRUE,
-  loop_category = "Indicator"
-)
-
 # state level - by age group
 seqic_indicator_1_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_1(
@@ -112,7 +99,7 @@ seqic_indicator_1_results_state_age <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -151,7 +138,7 @@ seqic_indicator_1_results_state_districts <- trauma_2021_2025 |>
     unique_incident_id = Unique_Incident_ID,
     response_time = Indicator_1_Time,
     trauma_team_activation_provider = Trauma_Team_Activation_Provider,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   reshape_seqic_indicators() |>
@@ -161,17 +148,17 @@ seqic_indicator_1_results_state_districts <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
 # districts (wide)
 seqic_indicator_1_results_state_districts_wide <- seqic_indicator_1_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
-  dplyr::select(Year, `Service Area`, indicator, name, performance) |>
+  dplyr::filter(Year == 2025) |>
+  dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
@@ -194,7 +181,7 @@ seqic_indicator_1_results_state_verification <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -215,11 +202,25 @@ export_state_data(
 # wide district level reporting
 export_state_data(
   x = seqic_indicator_1_results_state_districts_wide,
-  subfolder = "2"
+  subfolder = "1"
 )
 
 # verification level reporting
 export_state_data(
   x = seqic_indicator_1_results_state_verification,
+  subfolder = "1"
+)
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_1_results_state_convert,
+  sheet_name = "indicator_1",
+  column_fill = "03617A",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = TRUE,
+  loop_category = "Indicator",
   subfolder = "1"
 )
