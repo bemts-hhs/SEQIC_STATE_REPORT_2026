@@ -10,20 +10,20 @@
 ### SEQIC indicator 3 ####
 
 # Districts
-seqic_indicator_3_districts <- trauma_2020_2024 |>
+seqic_indicator_3_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_3(
     level = Level,
     trauma_type = Trauma_Type,
     unique_incident_id = Unique_Incident_ID,
     probability_of_survival = Probability_of_Survival_Calc,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level
-seqic_indicator_3_level <- trauma_2020_2024 |>
+seqic_indicator_3_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_3(
     level = Level,
     trauma_type = Trauma_Type,
@@ -40,7 +40,7 @@ seqic_indicator_3_level <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level
-seqic_indicator_3_results_state <- trauma_2020_2024 |>
+seqic_indicator_3_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_3(
     level = Level,
     trauma_type = Trauma_Type,
@@ -60,8 +60,22 @@ seqic_indicator_3_results_state <- trauma_2020_2024 |>
     )
   ))
 
+## convert state-level into a Word friendly format ----
+seqic_indicator_3_results_state_convert <- seqic_indicator_3_results_state |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
 # state level - by age group
-seqic_indicator_3_results_state_age <- trauma_2020_2024 |>
+seqic_indicator_3_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_3(
     level = Level,
     trauma_type = Trauma_Type,
@@ -108,13 +122,13 @@ seqic_indicator_3_results_state_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # districts
-seqic_indicator_3_results_state_districts <- trauma_2020_2024 |>
+seqic_indicator_3_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_3(
     level = Level,
     trauma_type = Trauma_Type,
     unique_incident_id = Unique_Incident_ID,
     probability_of_survival = Probability_of_Survival_Calc,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   reshape_seqic_indicators() |>
@@ -129,17 +143,16 @@ seqic_indicator_3_results_state_districts <- trauma_2020_2024 |>
   ))
 
 # districts (wide)
-seqic_indicator_3_results_state_districts_wide <- seqic_indicator_3_results_districts |>
-  dplyr::filter(Year == 2024) |>
-  dplyr::select(Year, `Service Area`, indicator, name, performance) |>
+seqic_indicator_3_results_state_districts_wide <- seqic_indicator_3_results_state_districts |>
+  dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # trauma center verification levels
-seqic_indicator_3_results_state_verification <- trauma_2020_2024 |>
+seqic_indicator_3_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_3(
     level = Level,
     trauma_type = Trauma_Type,
@@ -188,5 +201,18 @@ export_state_data(
 # verification level reporting
 export_state_data(
   x = seqic_indicator_3_results_state_verification,
+  subfolder = "3"
+)
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_3_results_state_convert,
+  sheet_name = "indicator_3",
+  column_fill = "70C8B8",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = FALSE,
   subfolder = "3"
 )

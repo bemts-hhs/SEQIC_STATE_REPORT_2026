@@ -154,7 +154,6 @@ seqic_indicator_1_results_state_districts <- trauma_2021_2025 |>
 
 # districts (wide)
 seqic_indicator_1_results_state_districts_wide <- seqic_indicator_1_results_state_districts |>
-  dplyr::filter(Year == 2025) |>
   dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
@@ -222,5 +221,16 @@ export_state_xlsx(
   performance_fill_color = "F8EDD3",
   loop = TRUE,
   loop_category = "Indicator",
+  subfolder = "1"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_1_results_state_districts_wide,
+  sheet_name = "indicator_1_districts",
+  remove_pattern = "(?:indicator\\s\\d[a-z]\\s-\\s)|trauma\\s|responding\\s",
+  column_fill = "03617A",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "1"
 )

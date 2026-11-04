@@ -1000,7 +1000,6 @@ export_state_data <- function(
   readr::write_csv(x = x, file = file_path)
 }
 
-# export SEQIC results as a styled .xlsx file, save to disk ----
 # _____________________________________________________________________________
 # Export Data Frames or Tibbles to Styled Excel Workbooks
 # _____________________________________________________________________________
@@ -1065,6 +1064,8 @@ export_state_data <- function(
 # output_folder
 #   Folder path where the workbook(s) will be saved.
 #
+# subfolder
+#   Subfolder path where the workbook(s) will be saved.
 #
 # Styling Rules
 # ____________
@@ -1386,4 +1387,226 @@ export_state_xlsx <- function(
         )
       )
   }
+}
+
+# ============================================================================
+# Export a formatted state-level district table to an Excel workbook.
+#
+# Purpose
+# -------
+# Create a single-sheet .xlsx workbook from a data frame or tibble using a
+# standardized reporting format developed for state-level district exports.
+# The workbook is written directly to disk and is intended for external
+# reporting deliverables rather than internal analytical workbooks.
+#
+# Formatting Specifications
+# -------------------------
+# - Worksheet contains a single table beginning at cell A1.
+# - Grid lines are disabled to create a cleaner presentation.
+# - Header row receives the project-standard fill color defined by the
+#   global object `column_fill`.
+# - Header text is bold, white, and centered (except where alignment rules
+#   dictate otherwise).
+# - Data rows use black text and the user-supplied font family.
+# - The first data column is treated as a label column and is displayed in
+#   bold to improve readability for district or geographic identifiers.
+# - All columns except the first are center aligned.
+# - The first column is left aligned.
+# - Horizontal inner grid lines are added between data rows using the
+#   supplied grid color.
+# - No outer table borders are applied.
+#
+# Design Notes
+# ------------
+# - Color objects are created once and reused throughout workbook styling
+#   operations to improve readability and reduce repetitive code.
+# - Worksheet dimensions are calculated up front and stored in objects
+#   (`col_dims` and `row_dims`) to simplify downstream styling calls.
+# - The workbook is constructed using an openxlsx2 pipeline so that all
+#   workbook modifications occur sequentially and are easy to follow.
+# - This function intentionally saves the workbook immediately rather than
+#   returning a workbook object. The primary use case is automated report
+#   generation.
+#
+# Assumptions
+# -----------
+# - `data` contains one row per district, geographic unit, or reporting
+#   entity.
+# - `column_fill` exists in the calling environment and contains a valid
+#   hexadecimal color value.
+# - `state_output_folder` exists when `output_folder` is not supplied.
+# - `output_folder/subfolder` already exists on disk.
+# - `sheet_name` is a valid Excel worksheet name and file name.
+# - `inner_grid_color` is a valid hexadecimal color value.
+#
+# Parameters
+# ----------
+# data:
+#   Data frame or tibble to export.
+#
+# sheet_name:
+#   Name of the worksheet and resulting Excel file.
+#
+# remove_pattern:
+#   Regex to remove unneeded text out of the name column
+#
+# column_fill
+#   Hex color value used for the worksheet header row.
+#
+# font_family:
+#   Font family applied to all workbook content. Defaults to "Work Sans".
+#
+# inner_grid_color:
+#   Hexadecimal color value used for horizontal row separators.
+#
+# output_folder:
+#   Root output directory where the workbook will be written.
+#
+# subfolder:
+#   Child directory beneath `output_folder` where the workbook will be saved.
+#
+# Output
+# ------
+# Side effect only. Writes a formatted .xlsx file to:
+#
+#   {output_folder}/{subfolder}/{sheet_name}.xlsx
+#
+# Validation
+# ----------
+# The function explicitly verifies that `data` is either a data.frame or
+# tibble before workbook generation begins. An informative cli error is
+# thrown if validation fails.
+#
+# Intended Usage
+# --------------
+# Used within automated state reporting pipelines to ensure district
+# summary tables have a consistent visual appearance across all exported
+# workbooks.
+# ============================================================================
+export_state_district_xlsx <- function(
+  data,
+  sheet_name,
+  remove_pattern = "indicator\\s\\d[a-z]\\s-\\s",
+  column_fill,
+  font_family = "Work Sans",
+  inner_grid_color,
+  output_folder = state_output_folder,
+  subfolder
+) {
+  # data must be a dataframe or tibble
+  if (!is.data.frame(data) && !tibble::is_tibble(data)) {
+    cli::cli_abort(
+      message = "{.var data} was found to have class {.cls {class(data)}}, but needs to be a {.cls data.frame} or {.cls tibble}"
+    )
+  }
+
+  # prepare data
+  data_prep <- data |>
+    dplyr::select(-indicator) |>
+    dplyr::mutate(
+      name = stringr::str_remove_all(
+        string = name,
+        pattern = stringr::regex(
+          pattern = remove_pattern,
+          ignore_case = TRUE
+        )
+      )
+    ) |>
+    dplyr::rename_with(~ stringr::str_to_title(.))
+
+  # assign the column fill color
+  column_fill_color <- openxlsx2::wb_color(hex = column_fill)
+
+  # assign the white color
+  white_color <- openxlsx2::wb_color(name = "white")
+
+  # assign the black color
+  black_color <- openxlsx2::wb_color(name = "black")
+
+  # assign the inner grid color
+  inner_grid_color <- inner_hcolor <- openxlsx2::wb_color(
+    hex = inner_grid_color
+  )
+
+  # assign the column dimensions
+  col_dims <- openxlsx2::wb_dims(
+    rows = 1,
+    cols = seq_len(ncol(data_prep))
+  )
+
+  # assign the row dimensions
+  row_dims <- openxlsx2::wb_dims(
+    rows = 2:(nrow(data_prep) + 1),
+    cols = seq_len(ncol(data_prep))
+  )
+
+  # create a new workbook via openxlsx2
+  openxlsx2::wb_workbook() |>
+    # initialize a new worksheet via openxlsx2
+    openxlsx2::wb_add_worksheet(
+      sheet = sheet_name,
+      grid_lines = FALSE
+    ) |>
+    # add data from the source to the workbook
+    openxlsx2::wb_add_data(
+      sheet = sheet_name,
+      x = data_prep
+    ) |>
+    # add a fill color to the columns
+    openxlsx2::wb_add_fill(
+      dims = col_dims,
+      color = column_fill_color
+    ) |>
+    # adjust the column font styling
+    openxlsx2::wb_add_font(
+      dims = col_dims,
+      name = font_family,
+      bold = TRUE,
+      color = white_color,
+      size = 12
+    ) |>
+    # adjust the cell font styling
+    openxlsx2::wb_add_font(
+      dims = row_dims,
+      name = font_family,
+      color = black_color,
+      size = 12
+    ) |>
+    # make the first column (not column header) bold
+    openxlsx2::wb_add_font(
+      dims = openxlsx2::wb_dims(rows = 2:nrow(data_prep) + 1, cols = 1),
+      name = font_family,
+      color = black_color,
+      bold = TRUE,
+      size = 12
+    ) |>
+    # add horizontal inner borders to the worksheet
+    openxlsx2::wb_add_border(
+      dims = row_dims,
+      inner_hgrid = "thin",
+      inner_hcolor = inner_grid_color,
+      bottom_border = "none",
+      left_border = "none",
+      right_border = "none",
+      top_border = "none"
+    ) |>
+    # make all columns and their data centered except for the first
+    openxlsx2::wb_add_cell_style(
+      dims = openxlsx2::wb_dims(
+        rows = 2:nrow(data_prep) + 1,
+        cols = 2:ncol(data_prep)
+      ),
+      horizontal = "center"
+    ) |>
+    # make the first column and its data aligned left
+    openxlsx2::wb_add_cell_style(
+      dims = openxlsx2::wb_dims(rows = 2:nrow(data_prep) + 1, cols = 1),
+      horizontal = "left"
+    ) |>
+    # save the formatted worksheet data to disk as a .xlsx file
+    openxlsx2::wb_save(
+      file = glue::glue(
+        "{output_folder}/{subfolder}/{sheet_name}.xlsx"
+      )
+    )
 }

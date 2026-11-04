@@ -31,7 +31,6 @@ trauma_2025 <-
   readr::read_csv(
     path_2025
   )
-trauma_2026 <- readr::read_csv("C:/Users/nfoss0/OneDrive - State of Iowa HHS/Analytics/BEMTS/TRAUMA DATA/SEQIC/trauma_2026.csv")
 
 # Get data into one file for all years for reporting across years ----
 # Although identical processing workflows were followed for all files, the zip

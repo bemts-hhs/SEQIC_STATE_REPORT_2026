@@ -9,19 +9,19 @@
 ### SEQIC indicator 2 ####
 
 # Districts
-seqic_indicator_2_districts <- trauma_2020_2024 |>
+seqic_indicator_2_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_2(
     unique_incident_id = Unique_Incident_ID,
     level = Level,
     incident_time = Incident_Time,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level
-seqic_indicator_2_level <- trauma_2020_2024 |>
+seqic_indicator_2_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_2(
     unique_incident_id = Unique_Incident_ID,
     level = Level,
@@ -37,7 +37,7 @@ seqic_indicator_2_level <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level
-seqic_indicator_2_results_state <- trauma_2020_2024 |>
+seqic_indicator_2_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_2(
     unique_incident_id = Unique_Incident_ID,
     level = Level,
@@ -56,8 +56,22 @@ seqic_indicator_2_results_state <- trauma_2020_2024 |>
     )
   ))
 
+## convert state-level into a Word friendly format ----
+seqic_indicator_2_results_state_convert <- seqic_indicator_2_results_state |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
 # state level - by age group
-seqic_indicator_2_results_state_age <- trauma_2020_2024 |>
+seqic_indicator_2_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_2(
     unique_incident_id = Unique_Incident_ID,
     level = Level,
@@ -103,12 +117,12 @@ seqic_indicator_2_results_state_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # districts
-seqic_indicator_2_results_state_districts <- trauma_2020_2024 |>
+seqic_indicator_2_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_2(
     unique_incident_id = Unique_Incident_ID,
     level = Level,
     incident_time = Incident_Time,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   reshape_seqic_indicators() |>
@@ -124,16 +138,15 @@ seqic_indicator_2_results_state_districts <- trauma_2020_2024 |>
 
 # districts (wide)
 seqic_indicator_2_results_state_districts_wide <- seqic_indicator_2_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
-  dplyr::select(Year, `Service Area`, indicator, name, performance) |>
+  dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # trauma center verification levels
-seqic_indicator_2_results_state_verification <- trauma_2020_2024 |>
+seqic_indicator_2_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_2(
     unique_incident_id = Unique_Incident_ID,
     level = Level,
@@ -181,5 +194,28 @@ export_state_data(
 # verification level reporting
 export_state_data(
   x = seqic_indicator_2_results_state_verification,
+  subfolder = "2"
+)
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_2_results_state_convert,
+  sheet_name = "indicator_2",
+  column_fill = "E0A624",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = FALSE,
+  subfolder = "2"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_2_results_state_districts_wide,
+  sheet_name = "indicator_2_districts",
+  column_fill = "03617A",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "2"
 )
