@@ -8,7 +8,7 @@
 
 ### SEQIC indicator 9 ####
 
-# Districts - overall
+# Districts - overall ----
 seqic_indicator_9_districts_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -29,7 +29,7 @@ seqic_indicator_9_districts_overall <- trauma_2021_2025 |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
   dplyr::relocate(Trauma_Team_Activated, .after = `Iowa HHS District`)
 
-# Districts - by trauma team activation status
+# Districts - by trauma team activation status ----
 seqic_indicator_9_districts_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -48,12 +48,12 @@ seqic_indicator_9_districts_activation <- trauma_2021_2025 |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Union the district tibbles
+# Union the district tibbles ----
 seqic_indicator_9_districts <- seqic_indicator_9_districts_overall |>
   dplyr::bind_rows(seqic_indicator_9_districts_activation) |>
   dplyr::arrange(`Iowa HHS District`, Year, Trauma_Team_Activated)
 
-# Level - overall
+# Level - overall ----
 seqic_indicator_9_level_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -74,7 +74,7 @@ seqic_indicator_9_level_overall <- trauma_2021_2025 |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
   dplyr::relocate(Trauma_Team_Activated, .after = Level_I_II)
 
-# Level - by trauma team activation status
+# Level - by trauma team activation status ----
 seqic_indicator_9_level_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -93,20 +93,20 @@ seqic_indicator_9_level_activation <- trauma_2021_2025 |>
   format_seqic_comparison(type = "level") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Union the level tibbles
+# Union the level tibbles ----
 seqic_indicator_9_level <- seqic_indicator_9_level_overall |>
   dplyr::bind_rows(seqic_indicator_9_level_activation) |>
   dplyr::arrange(`Level_I_II`, Year, Trauma_Team_Activated)
 
 ###_____________________________________________________________________________
-### More granular analyses
+### More granular analyses ----
 ### These analyses will not have the same features as the previous
 ### They will just report the simple outputs from the functions and compare each
 ### facility to others in their district and among similarly verified trauma
 ### centers
 ###_____________________________________________________________________________
 
-# Districts - risk group
+# Districts - risk group ----
 seqic_indicator_9_state_districts_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -125,7 +125,7 @@ seqic_indicator_9_state_districts_risk <- trauma_2021_2025 |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Districts - activations and risk group
+# Districts - activations and risk group ----
 seqic_indicator_9_state_districts_activations_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -144,7 +144,7 @@ seqic_indicator_9_state_districts_activations_risk <- trauma_2021_2025 |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Level - risk group
+# Level - risk group ----
 seqic_indicator_9_level_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -163,7 +163,7 @@ seqic_indicator_9_level_risk <- trauma_2021_2025 |>
   format_seqic_comparison(type = "level") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Level - activations and risk group
+# Level - activations and risk group ----
 seqic_indicator_9_level_activations_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -183,10 +183,10 @@ seqic_indicator_9_level_activations_risk <- trauma_2021_2025 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 ###_____________________________________________________________________________
-### State, District, and Verification Level Performance Reporting
+### State, District, and Verification Level Performance Reporting ----
 ###_____________________________________________________________________________
 
-# state level - overall
+# state level - overall ----
 seqic_indicator_9_results_state_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -215,7 +215,7 @@ seqic_indicator_9_results_state_overall <- trauma_2021_2025 |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
   dplyr::relocate(Trauma_Team_Activated, .after = indicator)
 
-# state level - trauma team activations
+# state level - trauma team activations ----
 seqic_indicator_9_results_state_activations <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -242,11 +242,30 @@ seqic_indicator_9_results_state_activations <- trauma_2021_2025 |>
     )
   ))
 
-# union the state level tables
+# union the state level tables ----
 seqic_indicator_9_results_state <- seqic_indicator_9_results_state_overall |>
   dplyr::bind_rows(seqic_indicator_9_results_state_activations)
 
-# state level - overall by age group
+## convert state-level into a Word friendly format ----
+seqic_indicator_8_results_state_convert <- seqic_indicator_8_results_state |>
+  dplyr::select(
+    Year,
+    Risk_Definition,
+    indicator,
+    numerator:tidyselect::last_col()
+  ) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
+# state level - overall by age group ----
 seqic_indicator_9_results_state_overall_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -301,7 +320,7 @@ seqic_indicator_9_results_state_overall_age <- trauma_2021_2025 |>
   ) |>
   dplyr::arrange(Year, Age_Range)
 
-# state level - by age group and trauma team activations
+# state level - by age group and trauma team activations ----
 seqic_indicator_9_results_state_activations_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -354,12 +373,12 @@ seqic_indicator_9_results_state_activations_age <- trauma_2021_2025 |>
   ) |>
   dplyr::arrange(Year, Age_Range)
 
-# union the state level tables
+# union the state level tables ----
 seqic_indicator_9_results_state_age <- seqic_indicator_9_results_state_overall_age |>
   dplyr::bind_rows(seqic_indicator_9_results_state_activations_age) |>
   dplyr::arrange(Year, Age_Range, Trauma_Team_Activated)
 
-# Districts - overall
+# Districts - overall ----
 seqic_indicator_9_results_state_districts_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -388,7 +407,7 @@ seqic_indicator_9_results_state_districts_overall <- trauma_2021_2025 |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
   dplyr::relocate(Trauma_Team_Activated, .after = `Iowa HHS District`)
 
-# Districts - by trauma team activation status
+# Districts - by trauma team activation status ----
 seqic_indicator_9_results_state_districts_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -415,12 +434,12 @@ seqic_indicator_9_results_state_districts_activation <- trauma_2021_2025 |>
     )
   ))
 
-# Union the district tibbles
+# Union the district tibbles ----
 seqic_indicator_9_results_state_districts <- seqic_indicator_9_results_state_districts_overall |>
   dplyr::bind_rows(seqic_indicator_9_results_state_districts_activation) |>
   dplyr::arrange(`Iowa HHS District`, Year, Trauma_Team_Activated)
 
-# districts (wide)
+# districts (wide) ----
 seqic_indicator_9_results_state_districts_wide <- seqic_indicator_9_results_state_districts |>
   dplyr::select(
     Year,
@@ -436,7 +455,7 @@ seqic_indicator_9_results_state_districts_wide <- seqic_indicator_9_results_stat
     values_from = performance
   )
 
-# Level - overall
+# Level - overall ----
 seqic_indicator_9_results_state_verification_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -465,7 +484,7 @@ seqic_indicator_9_results_state_verification_overall <- trauma_2021_2025 |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
   dplyr::relocate(Trauma_Team_Activated, .after = Level_I_II)
 
-# Level - by trauma team activation status
+# Level - by trauma team activation status ----
 seqic_indicator_9_results_state_verification_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
@@ -492,38 +511,38 @@ seqic_indicator_9_results_state_verification_activation <- trauma_2021_2025 |>
     )
   ))
 
-# Union the level tibbles
+# Union the level tibbles ----
 seqic_indicator_9_results_state_verification <- seqic_indicator_9_results_state_verification_overall |>
   dplyr::bind_rows(seqic_indicator_9_results_state_verification_activation) |>
   dplyr::arrange(`Level_I_II`, Year, Trauma_Team_Activated)
 
 ### Export ####
 
-# state level reporting
+# state level reporting ----
 export_state_data(
   x = seqic_indicator_9_results_state,
   subfolder = "9"
 )
 
-# state level by age reporting
+# state level by age reporting ----
 export_state_data(
   x = seqic_indicator_9_results_state_age,
   subfolder = "9"
 )
 
-# district level reporting
+# district level reporting ----
 export_state_data(
   x = seqic_indicator_9_results_state_districts,
   subfolder = "9"
 )
 
-# wide district level reporting
+# wide district level reporting ----
 export_state_data(
   x = seqic_indicator_9_results_state_districts_wide,
   subfolder = "9"
 )
 
-# verification level reporting
+# verification level reporting ----
 export_state_data(
   x = seqic_indicator_9_results_state_verification,
   subfolder = "9"
