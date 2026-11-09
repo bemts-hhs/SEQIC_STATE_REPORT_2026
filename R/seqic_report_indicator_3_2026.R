@@ -56,7 +56,7 @@ seqic_indicator_3_results_state <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -91,7 +91,7 @@ seqic_indicator_3_results_state_age <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -138,7 +138,7 @@ seqic_indicator_3_results_state_districts <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -168,7 +168,7 @@ seqic_indicator_3_results_state_verification <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -214,5 +214,16 @@ export_state_xlsx(
   performance_col_name = "performance",
   performance_fill_color = "F8EDD3",
   loop = FALSE,
+  subfolder = "3"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_3_results_state_districts_wide,
+  sheet_name = "indicator_3_districts",
+  remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+  column_fill = "70C8B8",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "3"
 )

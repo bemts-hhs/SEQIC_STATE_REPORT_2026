@@ -52,7 +52,7 @@ seqic_indicator_2_results_state <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -86,7 +86,7 @@ seqic_indicator_2_results_state_age <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -132,7 +132,7 @@ seqic_indicator_2_results_state_districts <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -161,7 +161,7 @@ seqic_indicator_2_results_state_verification <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -214,7 +214,8 @@ export_state_xlsx(
 export_state_district_xlsx(
   data = seqic_indicator_2_results_state_districts_wide,
   sheet_name = "indicator_2_districts",
-  column_fill = "03617A",
+  remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+  column_fill = "E0A624",
   font_family = "Work Sans",
   inner_grid_color = "B9E1DA",
   subfolder = "2"

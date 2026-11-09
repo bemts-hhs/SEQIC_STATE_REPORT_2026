@@ -9,13 +9,13 @@
 ### SEQIC indicator 8 ####
 
 # Districts - overall
-seqic_indicator_8_districts_overall <- trauma_2020_2024 |>
+seqic_indicator_8_districts_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
     mortality_indicator = Death,
     risk_group = Risk_Definition,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(1) |> # get the first list element, which houses the overall results
@@ -28,16 +28,16 @@ seqic_indicator_8_districts_overall <- trauma_2020_2024 |>
   ) |>
   dplyr::select(-c(`lower ci`, `upper ci`)) |>
   dplyr::mutate(Risk_Definition = "All") |>
-  dplyr::relocate(Risk_Definition, .after = `Service Area`)
+  dplyr::relocate(Risk_Definition, .after = `Iowa HHS District`)
 
 # Districts - risk groups
-seqic_indicator_8_districts_risk <- trauma_2020_2024 |>
+seqic_indicator_8_districts_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
     mortality_indicator = Death,
     risk_group = Risk_Definition,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(2) |> # get the second list element, which houses the overall results
@@ -53,10 +53,10 @@ seqic_indicator_8_districts_risk <- trauma_2020_2024 |>
 # Union the district tibbles
 seqic_indicator_8_districts <- seqic_indicator_8_districts_overall |>
   dplyr::bind_rows(seqic_indicator_8_districts_risk) |>
-  dplyr::arrange(`Service Area`, Year, Risk_Definition)
+  dplyr::arrange(`Iowa HHS District`, Year, Risk_Definition)
 
 # Level - overall
-seqic_indicator_8_level_overall <- trauma_2020_2024 |>
+seqic_indicator_8_level_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -78,7 +78,7 @@ seqic_indicator_8_level_overall <- trauma_2020_2024 |>
   dplyr::relocate(Risk_Definition, .after = Level_I_II)
 
 # Level - risk groups
-seqic_indicator_8_level_risk <- trauma_2020_2024 |>
+seqic_indicator_8_level_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -107,7 +107,7 @@ seqic_indicator_8_level <- seqic_indicator_8_level_overall |>
 ###_____________________________________________________________________________
 
 # state level
-seqic_indicator_8_results_state_overall <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -129,14 +129,14 @@ seqic_indicator_8_results_state_overall <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Risk_Definition = "All") |>
   dplyr::relocate(Risk_Definition, .before = indicator)
 
 # state level - risk groups
-seqic_indicator_8_results_state_risk <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -158,7 +158,7 @@ seqic_indicator_8_results_state_risk <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -180,8 +180,27 @@ seqic_indicator_8_results_state <- seqic_indicator_8_results_state_overall |>
   ) |>
   dplyr::arrange(Year, Risk_Definition)
 
+## convert state-level into a Word friendly format ----
+seqic_indicator_8_results_state_convert <- seqic_indicator_8_results_state |>
+  dplyr::select(
+    Year,
+    Risk_Definition,
+    indicator,
+    numerator:tidyselect::last_col()
+  ) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
 # state level - by age group
-seqic_indicator_8_results_state_overall_age <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_overall_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -203,7 +222,7 @@ seqic_indicator_8_results_state_overall_age <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Risk_Definition = "All") |>
@@ -236,7 +255,7 @@ seqic_indicator_8_results_state_overall_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # state level by age - risk groups
-seqic_indicator_8_results_state_risk_age <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_risk_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -258,7 +277,7 @@ seqic_indicator_8_results_state_risk_age <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -307,13 +326,13 @@ seqic_indicator_8_results_state_age <- seqic_indicator_8_results_state_overall_a
   dplyr::arrange(Year, Age_Range, Risk_Definition)
 
 # districts - overall
-seqic_indicator_8_results_state_districts_overall <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_districts_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
     mortality_indicator = Death,
     risk_group = Risk_Definition,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(1) |>
@@ -329,20 +348,20 @@ seqic_indicator_8_results_state_districts_overall <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Risk_Definition = "All") |>
   dplyr::relocate(Risk_Definition, .before = indicator)
 
 # districts - risk groups
-seqic_indicator_8_results_state_districts_risk <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_districts_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
     mortality_indicator = Death,
     risk_group = Risk_Definition,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(2) |>
@@ -358,7 +377,7 @@ seqic_indicator_8_results_state_districts_risk <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -378,14 +397,13 @@ seqic_indicator_8_results_state_districts <- seqic_indicator_8_results_state_dis
       levels = c("All", "Low", "Moderate", "High", "Missing")
     )
   ) |>
-  dplyr::arrange(Year, `Service Area`, Risk_Definition)
+  dplyr::arrange(Year, `Iowa HHS District`, Risk_Definition)
 
 # districts (wide)
 seqic_indicator_8_results_state_districts_wide <- seqic_indicator_8_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
   dplyr::select(
     Year,
-    `Service Area`,
+    `Iowa HHS District`,
     Risk_Definition,
     indicator,
     name,
@@ -393,12 +411,12 @@ seqic_indicator_8_results_state_districts_wide <- seqic_indicator_8_results_stat
   ) |>
   tidyr::pivot_wider(
     id_cols = c(Year, Risk_Definition, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # trauma center verification levels overall
-seqic_indicator_8_results_state_verification_overall <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_verification_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -420,14 +438,14 @@ seqic_indicator_8_results_state_verification_overall <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Risk_Definition = "All") |>
   dplyr::relocate(Risk_Definition, .before = indicator)
 
 # trauma center verification levels - risk groups
-seqic_indicator_8_results_state_verification_risk <- trauma_2020_2024 |>
+seqic_indicator_8_results_state_verification_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_8(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -449,7 +467,7 @@ seqic_indicator_8_results_state_verification_risk <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -502,3 +520,40 @@ export_state_data(
   x = seqic_indicator_8_results_state_verification,
   subfolder = "8"
 )
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_8_results_state_convert,
+  sheet_name = "indicator_8",
+  column_fill = "2c6358",
+  font_family = "Work Sans",
+  column_font_color = "white",
+  inner_grid_color = "B9E1DA",
+  loop = TRUE,
+  loop_category = "Risk_definition",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  subfolder = "8"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+seqic_indicator_8_results_state_districts_wide |>
+  dplyr::mutate(
+    name = ifelse(
+      Risk_Definition == "All",
+      "Overall Survival",
+      glue::glue("{Risk_Definition} Risk Survival")
+    )
+  ) |>
+  dplyr::filter_out(Risk_Definition == "Missing") |>
+  dplyr::arrange(Risk_Definition) |>
+  export_state_district_xlsx(
+    data = _,
+    sheet_name = "indicator_8_districts",
+    remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+    column_fill = "2c6358",
+    column_font_color = "white",
+    font_family = "Work Sans",
+    inner_grid_color = "B9E1DA",
+    subfolder = "8"
+  )

@@ -1129,6 +1129,7 @@ export_state_xlsx <- function(
   sheet_name,
   column_fill,
   font_family = "Work Sans",
+  column_font_color = "white",
   inner_grid_color,
   performance_col_name = "Performance",
   performance_fill_color = "F8EDD3",
@@ -1165,7 +1166,7 @@ export_state_xlsx <- function(
   column_fill_color <- openxlsx2::wb_color(hex = column_fill)
 
   # assign the white color
-  white_color <- openxlsx2::wb_color(name = "white")
+  column_font_col <- openxlsx2::wb_color(name = column_font_color)
 
   # assign the black color
   black_color <- openxlsx2::wb_color(name = "black")
@@ -1238,7 +1239,7 @@ export_state_xlsx <- function(
           dims = col_dims,
           name = font_family,
           bold = TRUE,
-          color = white_color,
+          color = column_font_col,
           size = 12
         ) |>
         # adjust the cell font styling
@@ -1337,7 +1338,7 @@ export_state_xlsx <- function(
         dims = col_dims,
         name = font_family,
         bold = TRUE,
-        color = white_color,
+        color = column_font_col,
         size = 12
       ) |>
       # adjust the cell font styling
@@ -1489,6 +1490,7 @@ export_state_district_xlsx <- function(
   remove_pattern = "indicator\\s\\d[a-z]\\s-\\s",
   column_fill,
   font_family = "Work Sans",
+  column_font_color = "white",
   inner_grid_color,
   output_folder = state_output_folder,
   subfolder
@@ -1518,7 +1520,7 @@ export_state_district_xlsx <- function(
   column_fill_color <- openxlsx2::wb_color(hex = column_fill)
 
   # assign the white color
-  white_color <- openxlsx2::wb_color(name = "white")
+  column_font_col <- openxlsx2::wb_color(name = column_font_color)
 
   # assign the black color
   black_color <- openxlsx2::wb_color(name = "black")
@@ -1562,7 +1564,7 @@ export_state_district_xlsx <- function(
       dims = col_dims,
       name = font_family,
       bold = TRUE,
-      color = white_color,
+      color = column_font_col,
       size = 12
     ) |>
     # adjust the cell font styling

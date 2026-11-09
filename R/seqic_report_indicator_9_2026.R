@@ -9,7 +9,7 @@
 ### SEQIC indicator 9 ####
 
 # Districts - overall
-seqic_indicator_9_districts_overall <- trauma_2020_2024 |>
+seqic_indicator_9_districts_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -20,17 +20,17 @@ seqic_indicator_9_districts_overall <- trauma_2020_2024 |>
     ed_LOS = Length_of_Stay,
     ed_decision_LOS = Time_From_ED_Arrival_to_Decision_Minutes,
     ed_decision_discharge_LOS = Time_From_ED_Decision_to_Discharge,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(1) |> # get the first list element, which houses the overall results
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`)) |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
-  dplyr::relocate(Trauma_Team_Activated, .after = `Service Area`)
+  dplyr::relocate(Trauma_Team_Activated, .after = `Iowa HHS District`)
 
 # Districts - by trauma team activation status
-seqic_indicator_9_districts_activation <- trauma_2020_2024 |>
+seqic_indicator_9_districts_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -41,7 +41,7 @@ seqic_indicator_9_districts_activation <- trauma_2020_2024 |>
     ed_LOS = Length_of_Stay,
     ed_decision_LOS = Time_From_ED_Arrival_to_Decision_Minutes,
     ed_decision_discharge_LOS = Time_From_ED_Decision_to_Discharge,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(2) |> # get the second list element, which houses the overall results
@@ -51,10 +51,10 @@ seqic_indicator_9_districts_activation <- trauma_2020_2024 |>
 # Union the district tibbles
 seqic_indicator_9_districts <- seqic_indicator_9_districts_overall |>
   dplyr::bind_rows(seqic_indicator_9_districts_activation) |>
-  dplyr::arrange(`Service Area`, Year, Trauma_Team_Activated)
+  dplyr::arrange(`Iowa HHS District`, Year, Trauma_Team_Activated)
 
 # Level - overall
-seqic_indicator_9_level_overall <- trauma_2020_2024 |>
+seqic_indicator_9_level_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -75,7 +75,7 @@ seqic_indicator_9_level_overall <- trauma_2020_2024 |>
   dplyr::relocate(Trauma_Team_Activated, .after = Level_I_II)
 
 # Level - by trauma team activation status
-seqic_indicator_9_level_activation <- trauma_2020_2024 |>
+seqic_indicator_9_level_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -107,7 +107,7 @@ seqic_indicator_9_level <- seqic_indicator_9_level_overall |>
 ###_____________________________________________________________________________
 
 # Districts - risk group
-seqic_indicator_9_state_districts_risk <- trauma_2020_2024 |>
+seqic_indicator_9_state_districts_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -118,7 +118,7 @@ seqic_indicator_9_state_districts_risk <- trauma_2020_2024 |>
     ed_LOS = Length_of_Stay,
     ed_decision_LOS = Time_From_ED_Arrival_to_Decision_Minutes,
     ed_decision_discharge_LOS = Time_From_ED_Decision_to_Discharge,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(3) |> # get the third list element, which houses the risk group results
@@ -126,7 +126,7 @@ seqic_indicator_9_state_districts_risk <- trauma_2020_2024 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Districts - activations and risk group
-seqic_indicator_9_state_districts_activations_risk <- trauma_2020_2024 |>
+seqic_indicator_9_state_districts_activations_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -137,7 +137,7 @@ seqic_indicator_9_state_districts_activations_risk <- trauma_2020_2024 |>
     ed_LOS = Length_of_Stay,
     ed_decision_LOS = Time_From_ED_Arrival_to_Decision_Minutes,
     ed_decision_discharge_LOS = Time_From_ED_Decision_to_Discharge,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(4) |> # get the fourth list element, which houses the activation / risk group results
@@ -145,7 +145,7 @@ seqic_indicator_9_state_districts_activations_risk <- trauma_2020_2024 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level - risk group
-seqic_indicator_9_level_risk <- trauma_2020_2024 |>
+seqic_indicator_9_level_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -164,7 +164,7 @@ seqic_indicator_9_level_risk <- trauma_2020_2024 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level - activations and risk group
-seqic_indicator_9_level_activations_risk <- trauma_2020_2024 |>
+seqic_indicator_9_level_activations_risk <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -187,7 +187,7 @@ seqic_indicator_9_level_activations_risk <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level - overall
-seqic_indicator_9_results_state_overall <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -216,7 +216,7 @@ seqic_indicator_9_results_state_overall <- trauma_2020_2024 |>
   dplyr::relocate(Trauma_Team_Activated, .after = indicator)
 
 # state level - trauma team activations
-seqic_indicator_9_results_state_activations <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_activations <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -247,7 +247,7 @@ seqic_indicator_9_results_state <- seqic_indicator_9_results_state_overall |>
   dplyr::bind_rows(seqic_indicator_9_results_state_activations)
 
 # state level - overall by age group
-seqic_indicator_9_results_state_overall_age <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_overall_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -302,7 +302,7 @@ seqic_indicator_9_results_state_overall_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # state level - by age group and trauma team activations
-seqic_indicator_9_results_state_activations_age <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_activations_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -360,7 +360,7 @@ seqic_indicator_9_results_state_age <- seqic_indicator_9_results_state_overall_a
   dplyr::arrange(Year, Age_Range, Trauma_Team_Activated)
 
 # Districts - overall
-seqic_indicator_9_results_state_districts_overall <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_districts_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -371,7 +371,7 @@ seqic_indicator_9_results_state_districts_overall <- trauma_2020_2024 |>
     ed_LOS = Length_of_Stay,
     ed_decision_LOS = Time_From_ED_Arrival_to_Decision_Minutes,
     ed_decision_discharge_LOS = Time_From_ED_Decision_to_Discharge,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(1) |> # get the first list element, which houses the overall results
@@ -386,10 +386,10 @@ seqic_indicator_9_results_state_districts_overall <- trauma_2020_2024 |>
     )
   )) |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
-  dplyr::relocate(Trauma_Team_Activated, .after = `Service Area`)
+  dplyr::relocate(Trauma_Team_Activated, .after = `Iowa HHS District`)
 
 # Districts - by trauma team activation status
-seqic_indicator_9_results_state_districts_activation <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_districts_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -400,7 +400,7 @@ seqic_indicator_9_results_state_districts_activation <- trauma_2020_2024 |>
     ed_LOS = Length_of_Stay,
     ed_decision_LOS = Time_From_ED_Arrival_to_Decision_Minutes,
     ed_decision_discharge_LOS = Time_From_ED_Decision_to_Discharge,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(2) |> # get the second list element, which houses the overall results
@@ -418,14 +418,13 @@ seqic_indicator_9_results_state_districts_activation <- trauma_2020_2024 |>
 # Union the district tibbles
 seqic_indicator_9_results_state_districts <- seqic_indicator_9_results_state_districts_overall |>
   dplyr::bind_rows(seqic_indicator_9_results_state_districts_activation) |>
-  dplyr::arrange(`Service Area`, Year, Trauma_Team_Activated)
+  dplyr::arrange(`Iowa HHS District`, Year, Trauma_Team_Activated)
 
 # districts (wide)
 seqic_indicator_9_results_state_districts_wide <- seqic_indicator_9_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
   dplyr::select(
     Year,
-    `Service Area`,
+    `Iowa HHS District`,
     Trauma_Team_Activated,
     indicator,
     name,
@@ -433,12 +432,12 @@ seqic_indicator_9_results_state_districts_wide <- seqic_indicator_9_results_stat
   ) |>
   tidyr::pivot_wider(
     id_cols = c(Year, Trauma_Team_Activated, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # Level - overall
-seqic_indicator_9_results_state_verification_overall <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_verification_overall <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -467,7 +466,7 @@ seqic_indicator_9_results_state_verification_overall <- trauma_2020_2024 |>
   dplyr::relocate(Trauma_Team_Activated, .after = Level_I_II)
 
 # Level - by trauma team activation status
-seqic_indicator_9_results_state_verification_activation <- trauma_2020_2024 |>
+seqic_indicator_9_results_state_verification_activation <- trauma_2021_2025 |>
   traumar::seqic_indicator_9(
     level = Level,
     unique_incident_id = Unique_Incident_ID,

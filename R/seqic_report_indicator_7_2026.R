@@ -10,21 +10,21 @@
 ### SEQIC indicator 7 ####
 
 # Districts
-seqic_indicator_7_districts <- trauma_2020_2024 |>
+seqic_indicator_7_districts <- trauma_2021_2025 |>
   dplyr::filter(Acute_Transfer_Out == "No") |>
   traumar::seqic_indicator_7(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
     time_from_injury_to_arrival = Time_From_Injury_to_Arrival_Calc,
     transfer_out_indicator = Acute_Transfer_Out,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level
-seqic_indicator_7_level <- trauma_2020_2024 |>
+seqic_indicator_7_level <- trauma_2021_2025 |>
   dplyr::filter(Acute_Transfer_Out == "No") |>
   traumar::seqic_indicator_7(
     level = Level,
@@ -42,7 +42,7 @@ seqic_indicator_7_level <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level
-seqic_indicator_7_results_state <- trauma_2020_2024 |>
+seqic_indicator_7_results_state <- trauma_2021_2025 |>
   dplyr::filter(Acute_Transfer_Out == "No") |>
   traumar::seqic_indicator_7(
     level = Level,
@@ -59,12 +59,26 @@ seqic_indicator_7_results_state <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
+## convert state-level into a Word friendly format ----
+seqic_indicator_7_results_state_convert <- seqic_indicator_7_results_state |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
 # state level - by age group
-seqic_indicator_7_results_state_age <- trauma_2020_2024 |>
+seqic_indicator_7_results_state_age <- trauma_2021_2025 |>
   dplyr::filter(Acute_Transfer_Out == "No") |>
   traumar::seqic_indicator_7(
     level = Level,
@@ -81,7 +95,7 @@ seqic_indicator_7_results_state_age <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -112,14 +126,14 @@ seqic_indicator_7_results_state_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # districts
-seqic_indicator_7_results_state_districts <- trauma_2020_2024 |>
+seqic_indicator_7_results_state_districts <- trauma_2021_2025 |>
   dplyr::filter(Acute_Transfer_Out == "No") |>
   traumar::seqic_indicator_7(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
     time_from_injury_to_arrival = Time_From_Injury_to_Arrival_Calc,
     transfer_out_indicator = Acute_Transfer_Out,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   reshape_seqic_indicators() |>
@@ -129,22 +143,21 @@ seqic_indicator_7_results_state_districts <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
 # districts (wide)
 seqic_indicator_7_results_state_districts_wide <- seqic_indicator_7_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
-  dplyr::select(Year, `Service Area`, indicator, name, performance) |>
+  dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # trauma center verification levels
-seqic_indicator_7_results_state_verification <- trauma_2020_2024 |>
+seqic_indicator_7_results_state_verification <- trauma_2021_2025 |>
   dplyr::filter(Acute_Transfer_Out == "No") |>
   traumar::seqic_indicator_7(
     level = Level,
@@ -161,7 +174,7 @@ seqic_indicator_7_results_state_verification <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -194,5 +207,30 @@ export_state_data(
 # verification level reporting
 export_state_data(
   x = seqic_indicator_7_results_state_verification,
+  subfolder = "7"
+)
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_7_results_state_convert,
+  sheet_name = "indicator_7",
+  column_fill = "C6D667",
+  font_family = "Work Sans",
+  column_font_color = "black",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  subfolder = "7"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_7_results_state_districts_wide,
+  sheet_name = "indicator_7_districts",
+  remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+  column_fill = "C6D667",
+  column_font_color = "black",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "7"
 )
