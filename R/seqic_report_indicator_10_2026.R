@@ -1,8 +1,8 @@
 ###_____________________________________________________________________________
-### SEQIC Indicator Calculations 2025 - Indicator 10 Under/Over Triage
+### SEQIC Indicator Calculations 2026 - Indicator 10 Under/Over Triage
 ### Care
-### To run this script, you must first have ran seqic_data_load.R and
-### seqic_report_setup_2025.R.  Without running these, some functions and the
+### To run this script, you must first have ran data_load.R and
+### setup.R.  Without running these, some functions and the
 ### data needed to use this script will not be available in your global
 ### environment
 ###_____________________________________________________________________________
@@ -10,7 +10,7 @@
 ### SEQIC indicator 10 ####
 
 # Districts
-seqic_indicator_10_districts <- trauma_2020_2024 |>
+seqic_indicator_10_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -18,7 +18,7 @@ seqic_indicator_10_districts <- trauma_2020_2024 |>
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     iss = NULL,
     nfti = NFTI,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(1) |>
@@ -26,7 +26,7 @@ seqic_indicator_10_districts <- trauma_2020_2024 |>
   dplyr::select(-c(`lower ci`, `upper ci`, triage_logic))
 
 # Level
-seqic_indicator_10_level <- trauma_2020_2024 |>
+seqic_indicator_10_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -46,7 +46,7 @@ seqic_indicator_10_level <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level
-seqic_indicator_10_results_state <- trauma_2020_2024 |>
+seqic_indicator_10_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -70,7 +70,7 @@ seqic_indicator_10_results_state <- trauma_2020_2024 |>
   ))
 
 # state level - by age group
-seqic_indicator_10_results_state_age <- trauma_2020_2024 |>
+seqic_indicator_10_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -120,7 +120,7 @@ seqic_indicator_10_results_state_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # districts
-seqic_indicator_10_results_state_districts <- trauma_2020_2024 |>
+seqic_indicator_10_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -128,7 +128,7 @@ seqic_indicator_10_results_state_districts <- trauma_2020_2024 |>
     trauma_team_activation_level = Trauma_Team_Activation_Level,
     iss = NULL,
     nfti = NFTI,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   purrr::pluck(1) |>
@@ -145,16 +145,15 @@ seqic_indicator_10_results_state_districts <- trauma_2020_2024 |>
 
 # districts (wide)
 seqic_indicator_10_results_state_districts_wide <- seqic_indicator_10_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
-  dplyr::select(Year, `Service Area`, indicator, name, performance) |>
+  dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # trauma center verification levels
-seqic_indicator_10_results_state_verification <- trauma_2020_2024 |>
+seqic_indicator_10_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -206,5 +205,32 @@ export_state_data(
 # verification level reporting
 export_state_data(
   x = seqic_indicator_10_results_state_verification,
+  subfolder = "10"
+)
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_10_results_state_convert,
+  sheet_name = "indicator_10",
+  column_fill = "c1d1c6",
+  font_family = "Work Sans",
+  column_font_color = "black",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = TRUE,
+  loop_category = "Indicator",
+  subfolder = "10"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_10_results_state_districts_wide,
+  sheet_name = "indicator_10_districts",
+  remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+  column_fill = "c1d1c6",
+  column_font_color = "black",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "10"
 )

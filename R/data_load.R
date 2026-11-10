@@ -1,5 +1,5 @@
 ###_____________________________________________________________________________
-### Loading data for the distribution of SEQIC reports in 2025
+### Loading data for the SEQIC state report in 2026
 ### All data for these reports will be 2021 - 2025 with 2025 being the 'current'
 ### year. Date of data download/processing from the Iowa Trauma Registry:
 ### 9/30/2026 for 2021-2025.

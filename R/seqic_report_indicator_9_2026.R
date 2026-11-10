@@ -1,7 +1,7 @@
 ###_____________________________________________________________________________
-### SEQIC Indicator Calculations 2025 - Indicator 9 Transfer Delays
-### To run this script, you must first have ran seqic_data_load.R and
-### seqic_report_setup_2025.R.  Without running these, some functions and the
+### SEQIC Indicator Calculations 2026 - Indicator 9 Transfer Delays
+### To run this script, you must first have ran data_load.R and
+### setup.R.  Without running these, some functions and the
 ### data needed to use this script will not be available in your global
 ### environment
 ###_____________________________________________________________________________
@@ -209,11 +209,25 @@ seqic_indicator_9_results_state_overall <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
   dplyr::relocate(Trauma_Team_Activated, .after = indicator)
+
+## convert state-level into a Word friendly format ----
+seqic_indicator_9_results_state_convert <- seqic_indicator_9_results_state_overall |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
 
 # state level - trauma team activations ----
 seqic_indicator_9_results_state_activations <- trauma_2021_2025 |>
@@ -238,32 +252,13 @@ seqic_indicator_9_results_state_activations <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
 # union the state level tables ----
 seqic_indicator_9_results_state <- seqic_indicator_9_results_state_overall |>
   dplyr::bind_rows(seqic_indicator_9_results_state_activations)
-
-## convert state-level into a Word friendly format ----
-seqic_indicator_8_results_state_convert <- seqic_indicator_8_results_state |>
-  dplyr::select(
-    Year,
-    Risk_Definition,
-    indicator,
-    numerator:tidyselect::last_col()
-  ) |>
-  dplyr::mutate(
-    dplyr::across(
-      numerator:denominator,
-      ~ prettyNum(x = ., big.mark = ",")
-    ),
-    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
-  ) |>
-  dplyr::select(-tidyselect::matches("ci$")) |>
-  dplyr::rename_with(~ stringr::str_to_title(.)) |>
-  dplyr::rename("Performance (95% CI)" = Performance)
 
 # state level - overall by age group ----
 seqic_indicator_9_results_state_overall_age <- trauma_2021_2025 |>
@@ -288,7 +283,7 @@ seqic_indicator_9_results_state_overall_age <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
@@ -343,7 +338,7 @@ seqic_indicator_9_results_state_activations_age <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -401,7 +396,7 @@ seqic_indicator_9_results_state_districts_overall <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
@@ -430,7 +425,7 @@ seqic_indicator_9_results_state_districts_activation <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -478,7 +473,7 @@ seqic_indicator_9_results_state_verification_overall <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(Trauma_Team_Activated = "All Records") |>
@@ -507,7 +502,7 @@ seqic_indicator_9_results_state_verification_activation <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
@@ -545,5 +540,32 @@ export_state_data(
 # verification level reporting ----
 export_state_data(
   x = seqic_indicator_9_results_state_verification,
+  subfolder = "9"
+)
+
+# save the converted values to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_9_results_state_convert,
+  sheet_name = "indicator_9",
+  column_fill = "b8ccd7",
+  font_family = "Work Sans",
+  column_font_color = "white",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = TRUE,
+  loop_category = "Indicator",
+  subfolder = "9"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_9_results_state_districts_wide,
+  sheet_name = "indicator_9_districts",
+  remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+  column_fill = "b8ccd7",
+  column_font_color = "white",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "9"
 )

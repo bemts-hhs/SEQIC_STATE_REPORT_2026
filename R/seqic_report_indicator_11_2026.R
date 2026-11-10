@@ -1,7 +1,7 @@
 ###_____________________________________________________________________________
-### SEQIC Indicator Calculations 2025 - Indicator 11 Unnecessary transfers
-### To run this script, you must first have ran seqic_data_load.R and
-### seqic_report_setup_2025.R.  Without running these, some functions and the
+### SEQIC Indicator Calculations 2026 - Indicator 11 Unnecessary transfers
+### To run this script, you must first have ran data_load.R and
+### setup.R.  Without running these, some functions and the
 ### data needed to use this script will not be available in your global
 ### environment
 ###_____________________________________________________________________________
