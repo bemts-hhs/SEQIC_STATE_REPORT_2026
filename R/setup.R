@@ -1048,10 +1048,11 @@ export_state_data <- function(
 # performance_col_name
 #   Name or partial name of the column to highlight. Matching is performed
 #   using grepl() and is case-insensitive. Exactly one matching column must
-#   be identified.
+#   be identified. If `NULL`, highlighting will not happen.
 #
 # performance_fill_color
-#   Hex color value used to highlight the performance column.
+#   Hex color value used to optionally highlight the performance column if not
+#   `NULL`.
 #
 # loop
 #   Logical value indicating whether the dataset should be split into
@@ -1177,20 +1178,22 @@ export_state_xlsx <- function(
   )
 
   # get the performance column index
-  performance_col <- which(
-    grepl(pattern = performance_col_name, x = names(data), ignore.case = TRUE)
-  )
-
-  # validate that exactly one performance column was found
-  if (length(performance_col) != 1) {
-    cli::cli_abort(
-      message = "Expected exactly one performance column matching
-      {.val {performance_col_name}}."
+  if (!is.null(performance_col_name) && !is.null(performance_fill_color)) {
+    performance_col <- which(
+      grepl(pattern = performance_col_name, x = names(data), ignore.case = TRUE)
     )
-  }
 
-  # assign cell fill color for the performance column
-  performance_fill_color <- openxlsx2::wb_color(hex = performance_fill_color)
+    # validate that exactly one performance column was found
+    if (length(performance_col) != 1) {
+      cli::cli_abort(
+        message = "Expected exactly one performance column matching
+      {.val {performance_col_name}}."
+      )
+    }
+
+    # assign cell fill color for the performance column
+    performance_fill_color <- openxlsx2::wb_color(hex = performance_fill_color)
+  }
 
   # if loop is activated, loop over categories to export multiple files ----
   if (loop) {
@@ -1211,14 +1214,17 @@ export_state_xlsx <- function(
         cols = seq_len(ncol(data_subset))
       )
 
-      # assign cell locations for the performance column and its rows
-      performance_col_rows <- openxlsx2::wb_dims(
-        rows = 2:(nrow(data_subset) + 1),
-        cols = performance_col
-      )
+      # optionally identify the performance column target rows
+      if (!is.null(performance_col_name) && !is.null(performance_fill_color)) {
+        # assign cell locations for the performance column and its rows
+        performance_col_rows <- openxlsx2::wb_dims(
+          rows = 2:(nrow(data_subset) + 1),
+          cols = performance_col
+        )
+      }
 
       # create a new workbook via openxlsx2
-      openxlsx2::wb_workbook() |>
+      temp <- openxlsx2::wb_workbook() |>
         # initialize a new worksheet via openxlsx2
         openxlsx2::wb_add_worksheet(
           sheet = sheet_name,
@@ -1270,11 +1276,6 @@ export_state_xlsx <- function(
           right_border = "none",
           top_border = "none"
         ) |>
-        # add a fill to the performance column to highlight it
-        openxlsx2::wb_add_fill(
-          dims = performance_col_rows,
-          color = performance_fill_color
-        ) |>
         # make all columns and their data centered except for the first
         openxlsx2::wb_add_cell_style(
           dims = openxlsx2::wb_dims(
@@ -1294,6 +1295,15 @@ export_state_xlsx <- function(
             "{output_folder}/{subfolder}/{category}.xlsx"
           )
         )
+
+      # optionally add a fill to the performance column to highlight it
+      if (!is.null(performance_col_name) && !is.null(performance_fill_color)) {
+        temp <- openxlsx2::wb_add_fill(
+          wb = temp,
+          dims = performance_col_rows,
+          color = performance_fill_color
+        )
+      }
     }
 
     # if the loop is not activated, run the iteration on the whole document
@@ -1310,14 +1320,17 @@ export_state_xlsx <- function(
       cols = seq_len(ncol(data))
     )
 
-    # assign cell locations for the performance column and its rows
-    performance_col_rows <- openxlsx2::wb_dims(
-      rows = 2:(nrow(data) + 1),
-      cols = performance_col
-    )
+    # optionally identify the performance column target rows
+    if (!is.null(performance_col_name) && !is.null(performance_fill_color)) {
+      # assign cell locations for the performance column and its rows
+      performance_col_rows <- openxlsx2::wb_dims(
+        rows = 2:(nrow(data_subset) + 1),
+        cols = performance_col
+      )
+    }
 
     # create a new workbook via openxlsx2
-    openxlsx2::wb_workbook() |>
+    temp <- openxlsx2::wb_workbook() |>
       # initialize a new worksheet via openxlsx2
       openxlsx2::wb_add_worksheet(
         sheet = sheet_name,
@@ -1366,11 +1379,6 @@ export_state_xlsx <- function(
         right_border = "none",
         top_border = "none"
       ) |>
-      # add a fill to the performance column to highlight it
-      openxlsx2::wb_add_fill(
-        dims = performance_col_rows,
-        color = performance_fill_color
-      ) |>
       # make all columns and their data centered except for the first
       openxlsx2::wb_add_cell_style(
         dims = openxlsx2::wb_dims(rows = 1:nrow(data) + 1, cols = 2:ncol(data)),
@@ -1387,7 +1395,19 @@ export_state_xlsx <- function(
           "{output_folder}/{subfolder}/{sheet_name}.xlsx"
         )
       )
+
+    # optionally add a fill to the performance column to highlight it
+    if (!is.null(performance_col_name) && !is.null(performance_fill_color)) {
+      temp <- openxlsx2::wb_add_fill(
+        wb = temp,
+        dims = performance_col_rows,
+        color = performance_fill_color
+      )
+    }
   }
+
+  # return the completed worksheet
+  return(temp)
 }
 
 # ============================================================================

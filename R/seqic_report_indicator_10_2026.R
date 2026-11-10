@@ -9,7 +9,7 @@
 
 ### SEQIC indicator 10 ####
 
-# Districts
+# Districts ----
 seqic_indicator_10_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
@@ -25,7 +25,7 @@ seqic_indicator_10_districts <- trauma_2021_2025 |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`, triage_logic))
 
-# Level
+# Level ----
 seqic_indicator_10_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
@@ -42,10 +42,10 @@ seqic_indicator_10_level <- trauma_2021_2025 |>
   dplyr::select(-c(`lower ci`, `upper ci`, triage_logic))
 
 ###_____________________________________________________________________________
-### State, District, and Verification Level Performance Reporting
+### State, District, and Verification Level Performance Reporting ----
 ###_____________________________________________________________________________
 
-# state level
+# state level ----
 seqic_indicator_10_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
@@ -65,11 +65,25 @@ seqic_indicator_10_results_state <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
-# state level - by age group
+## convert state-level into a Word friendly format ----
+seqic_indicator_10_results_state_convert <- seqic_indicator_10_results_state |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
+# state level - by age group ----
 seqic_indicator_10_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
@@ -89,7 +103,7 @@ seqic_indicator_10_results_state_age <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -119,7 +133,7 @@ seqic_indicator_10_results_state_age <- trauma_2021_2025 |>
   ) |>
   dplyr::arrange(Year, Age_Range)
 
-# districts
+# districts ----
 seqic_indicator_10_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
@@ -139,11 +153,11 @@ seqic_indicator_10_results_state_districts <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
-# districts (wide)
+# districts (wide) ----
 seqic_indicator_10_results_state_districts_wide <- seqic_indicator_10_results_state_districts |>
   dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
@@ -152,7 +166,7 @@ seqic_indicator_10_results_state_districts_wide <- seqic_indicator_10_results_st
     values_from = performance
   )
 
-# trauma center verification levels
+# trauma center verification levels ----
 seqic_indicator_10_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_10(
     level = Level,
@@ -172,37 +186,61 @@ seqic_indicator_10_results_state_verification <- trauma_2021_2025 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
+## convert state-level with verification level detail into a Word friendly format ----
+seqic_indicator_10_results_state_verification_convert <- seqic_indicator_10_results_state_verification |>
+  dplyr::select(
+    Year,
+    Level_I_II,
+    indicator,
+    numerator:tidyselect::last_col()
+  ) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$|numerator|denominator")) |>
+  dplyr::rename_with(.cols = -Level_I_II, ~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance) |>
+  tidyr::pivot_wider(
+    id_cols = c(Level_I_II, Indicator),
+    names_from = Year,
+    values_from = `Performance (95% CI)`
+  )
+
 ### Export ####
 
-# state level reporting
+# state level reporting ----
 export_state_data(
   x = seqic_indicator_10_results_state,
   subfolder = "10"
 )
 
-# state level by age reporting
+# state level by age reporting ----
 export_state_data(
   x = seqic_indicator_10_results_state_age,
   subfolder = "10"
 )
 
-# district level reporting
+# district level reporting ----
 export_state_data(
   x = seqic_indicator_10_results_state_districts,
   subfolder = "10"
 )
 
-# district level reporting
+# district level reporting ----
 export_state_data(
   x = seqic_indicator_10_results_state_districts_wide,
   subfolder = "10"
 )
 
-# verification level reporting
+# verification level reporting ----
 export_state_data(
   x = seqic_indicator_10_results_state_verification,
   subfolder = "10"
@@ -221,6 +259,21 @@ export_state_xlsx(
   loop = TRUE,
   loop_category = "Indicator",
   subfolder = "10"
+)
+
+# save the converted values by level to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_10_results_state_verification_convert,
+  sheet_name = "indicator_10_level",
+  column_fill = "c1d1c6",
+  font_family = "Work Sans",
+  column_font_color = "black",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = NULL,
+  performance_fill_color = NULL,
+  loop = TRUE,
+  loop_category = "Indicator",
+  subfolder = "10/level/"
 )
 
 # save the wide district performance table to disk as .xlsx ----

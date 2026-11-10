@@ -9,7 +9,7 @@
 ### SEQIC indicator 11 ####
 
 # Districts
-seqic_indicator_11_districts <- trauma_2020_2024 |>
+seqic_indicator_11_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -17,14 +17,14 @@ seqic_indicator_11_districts <- trauma_2020_2024 |>
     receiving_indicator = Receiving,
     iss = ISS_Calculated,
     ed_LOS = Length_of_Stay,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 # Level
-seqic_indicator_11_level <- trauma_2020_2024 |>
+seqic_indicator_11_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -43,7 +43,7 @@ seqic_indicator_11_level <- trauma_2020_2024 |>
 ###_____________________________________________________________________________
 
 # state level
-seqic_indicator_11_results_state <- trauma_2020_2024 |>
+seqic_indicator_11_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -61,12 +61,12 @@ seqic_indicator_11_results_state <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
 # state level - by age group
-seqic_indicator_11_results_state_age <- trauma_2020_2024 |>
+seqic_indicator_11_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -84,7 +84,7 @@ seqic_indicator_11_results_state_age <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   )) |>
   dplyr::mutate(
@@ -115,7 +115,7 @@ seqic_indicator_11_results_state_age <- trauma_2020_2024 |>
   dplyr::arrange(Year, Age_Range)
 
 # districts
-seqic_indicator_11_results_state_districts <- trauma_2020_2024 |>
+seqic_indicator_11_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -123,7 +123,7 @@ seqic_indicator_11_results_state_districts <- trauma_2020_2024 |>
     receiving_indicator = Receiving,
     iss = ISS_Calculated,
     ed_LOS = Length_of_Stay,
-    groups = c("Year", "Service Area"),
+    groups = c("Year", "Iowa HHS District"),
     calculate_ci = "w"
   ) |>
   reshape_seqic_indicators() |>
@@ -133,22 +133,21 @@ seqic_indicator_11_results_state_districts <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
 # districts (wide)
 seqic_indicator_11_results_state_districts_wide <- seqic_indicator_11_results_state_districts |>
-  dplyr::filter(Year == 2024) |>
-  dplyr::select(Year, `Service Area`, indicator, name, performance) |>
+  dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
     id_cols = c(Year, indicator, name),
-    names_from = `Service Area`,
+    names_from = `Iowa HHS District`,
     values_from = performance
   )
 
 # trauma center verification levels
-seqic_indicator_11_results_state_verification <- trauma_2020_2024 |>
+seqic_indicator_11_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
     unique_incident_id = Unique_Incident_ID,
@@ -166,7 +165,7 @@ seqic_indicator_11_results_state_verification <- trauma_2020_2024 |>
     ~ ifelse(
       is.na(.),
       NA_real_,
-      traumar::pretty_percent(variable = ., n_decimal = 2)
+      traumar::pretty_percent(variable = ., n_decimal = 1)
     )
   ))
 
