@@ -8,7 +8,7 @@
 
 ### SEQIC indicator 11 ####
 
-# Districts
+# Districts ----
 seqic_indicator_11_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
@@ -23,7 +23,7 @@ seqic_indicator_11_districts <- trauma_2021_2025 |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Level
+# Level ----
 seqic_indicator_11_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
@@ -39,10 +39,10 @@ seqic_indicator_11_level <- trauma_2021_2025 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 ###_____________________________________________________________________________
-### State, District, and Verification Level Performance Reporting
+### State, District, and Verification Level Performance Reporting ----
 ###_____________________________________________________________________________
 
-# state level
+# state level ----
 seqic_indicator_11_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
@@ -65,7 +65,21 @@ seqic_indicator_11_results_state <- trauma_2021_2025 |>
     )
   ))
 
-# state level - by age group
+## convert state-level into a Word friendly format ----
+seqic_indicator_11_results_state_convert <- seqic_indicator_11_results_state |>
+  dplyr::select(Year, indicator, numerator:tidyselect::last_col()) |>
+  dplyr::mutate(
+    dplyr::across(
+      numerator:denominator,
+      ~ prettyNum(x = ., big.mark = ",")
+    ),
+    performance = glue::glue("{performance} ({`lower ci`}-{`upper ci`})")
+  ) |>
+  dplyr::select(-tidyselect::matches("ci$")) |>
+  dplyr::rename_with(~ stringr::str_to_title(.)) |>
+  dplyr::rename("Performance (95% CI)" = Performance)
+
+# state level - by age group ----
 seqic_indicator_11_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
@@ -114,7 +128,7 @@ seqic_indicator_11_results_state_age <- trauma_2021_2025 |>
   ) |>
   dplyr::arrange(Year, Age_Range)
 
-# districts
+# districts ----
 seqic_indicator_11_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
@@ -137,7 +151,7 @@ seqic_indicator_11_results_state_districts <- trauma_2021_2025 |>
     )
   ))
 
-# districts (wide)
+# districts (wide) ----
 seqic_indicator_11_results_state_districts_wide <- seqic_indicator_11_results_state_districts |>
   dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
@@ -146,7 +160,7 @@ seqic_indicator_11_results_state_districts_wide <- seqic_indicator_11_results_st
     values_from = performance
   )
 
-# trauma center verification levels
+# trauma center verification levels ----
 seqic_indicator_11_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_11(
     level = Level,
@@ -171,32 +185,58 @@ seqic_indicator_11_results_state_verification <- trauma_2021_2025 |>
 
 ### Export ####
 
-# state level reporting
+# state level reporting ----
 export_state_data(
   x = seqic_indicator_11_results_state,
   subfolder = "11"
 )
 
-# state level by age reporting
+# state level by age reporting ----
 export_state_data(
   x = seqic_indicator_11_results_state_age,
   subfolder = "11"
 )
 
-# district level reporting
+# district level reporting ----
 export_state_data(
   x = seqic_indicator_11_results_state_districts,
   subfolder = "11"
 )
 
-# wide district level reporting
+# wide district level reporting ----
 export_state_data(
   x = seqic_indicator_11_results_state_districts,
   subfolder = "11"
 )
 
-# verification level reporting
+# verification level reporting ----
 export_state_data(
   x = seqic_indicator_11_results_state_verification,
+  subfolder = "11"
+)
+
+# save the converted values by level to disk for use in the report ----
+export_state_xlsx(
+  data = seqic_indicator_11_results_state_convert,
+  sheet_name = "indicator_11",
+  column_fill = "b1bcd5",
+  font_family = "Work Sans",
+  column_font_color = "black",
+  inner_grid_color = "B9E1DA",
+  performance_col_name = "performance",
+  performance_fill_color = "F8EDD3",
+  loop = FALSE,
+  subfolder = "11"
+)
+
+# save the wide district performance table to disk as .xlsx ----
+export_state_district_xlsx(
+  data = seqic_indicator_11_results_state_districts_wide,
+  sheet_name = "indicator_11_districts",
+  remove_pattern = "indicator\\s\\d[a-z]?\\s-\\s",
+  column_fill = "b1bcd5",
+  column_font_color = "black",
+  font_family = "Work Sans",
+  inner_grid_color = "B9E1DA",
   subfolder = "11"
 )

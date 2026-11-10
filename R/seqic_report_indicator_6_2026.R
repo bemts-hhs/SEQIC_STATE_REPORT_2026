@@ -8,7 +8,7 @@
 
 ### SEQIC indicator 6 ####
 
-# Districts
+# Districts ----
 seqic_indicator_6_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_6(
     level = Level,
@@ -23,7 +23,7 @@ seqic_indicator_6_districts <- trauma_2021_2025 |>
   format_seqic_comparison(type = "district") |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
-# Level
+# Level ----
 seqic_indicator_6_level <- trauma_2021_2025 |>
   traumar::seqic_indicator_6(
     level = Level,
@@ -39,10 +39,10 @@ seqic_indicator_6_level <- trauma_2021_2025 |>
   dplyr::select(-c(`lower ci`, `upper ci`))
 
 ###_____________________________________________________________________________
-### State, District, and Verification Level Performance Reporting
+### State, District, and Verification Level Performance Reporting ----
 ###_____________________________________________________________________________
 
-# state level
+# state level ----
 seqic_indicator_6_results_state <- trauma_2021_2025 |>
   traumar::seqic_indicator_6(
     level = Level,
@@ -79,7 +79,7 @@ seqic_indicator_6_results_state_convert <- seqic_indicator_6_results_state |>
   dplyr::rename_with(~ stringr::str_to_title(.)) |>
   dplyr::rename("Performance (95% CI)" = Performance)
 
-# state level - by age group
+# state level - by age group ----
 seqic_indicator_6_results_state_age <- trauma_2021_2025 |>
   traumar::seqic_indicator_6(
     level = Level,
@@ -128,7 +128,7 @@ seqic_indicator_6_results_state_age <- trauma_2021_2025 |>
   ) |>
   dplyr::arrange(Year, Age_Range)
 
-# districts
+# districts ----
 seqic_indicator_6_results_state_districts <- trauma_2021_2025 |>
   traumar::seqic_indicator_6(
     level = Level,
@@ -151,7 +151,7 @@ seqic_indicator_6_results_state_districts <- trauma_2021_2025 |>
     )
   ))
 
-# districts (wide)
+# districts (wide) ----
 seqic_indicator_6_results_state_districts_wide <- seqic_indicator_6_results_state_districts |>
   dplyr::select(Year, `Iowa HHS District`, indicator, name, performance) |>
   tidyr::pivot_wider(
@@ -160,7 +160,7 @@ seqic_indicator_6_results_state_districts_wide <- seqic_indicator_6_results_stat
     values_from = performance
   )
 
-# trauma center verification levels
+# trauma center verification levels ----
 seqic_indicator_6_results_state_verification <- trauma_2021_2025 |>
   traumar::seqic_indicator_6(
     level = Level,
@@ -185,31 +185,31 @@ seqic_indicator_6_results_state_verification <- trauma_2021_2025 |>
 
 ### Export ####
 
-# state level reporting
+# state level reporting ----
 export_state_data(
   x = seqic_indicator_6_results_state,
   subfolder = "6"
 )
 
-# state level by age reporting
+# state level by age reporting ----
 export_state_data(
   x = seqic_indicator_6_results_state_age,
   subfolder = "6"
 )
 
-# district level reporting
+# district level reporting ----
 export_state_data(
   x = seqic_indicator_6_results_state_districts,
   subfolder = "6"
 )
 
-# wide district level reporting
+# wide district level reporting ----
 export_state_data(
   x = seqic_indicator_6_results_state_districts_wide,
   subfolder = "6"
 )
 
-# verification level reporting
+# verification level reporting ----
 export_state_data(
   x = seqic_indicator_6_results_state_verification,
   subfolder = "6"

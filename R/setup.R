@@ -1324,7 +1324,7 @@ export_state_xlsx <- function(
     if (!is.null(performance_col_name) && !is.null(performance_fill_color)) {
       # assign cell locations for the performance column and its rows
       performance_col_rows <- openxlsx2::wb_dims(
-        rows = 2:(nrow(data_subset) + 1),
+        rows = 2:(nrow(data) + 1),
         cols = performance_col
       )
     }
